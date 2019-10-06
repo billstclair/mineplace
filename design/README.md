@@ -1,4 +1,4 @@
-# JSMaze Design
+# MinePlace Design
 
 ## Why?
 
