@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 --
 -- Persistence.elm
--- Functions for maintaining the state of the JSMaze board.
+-- Functions for maintaining the state of the MinePlace board.
 -- Copyright (c) 2018 Bill St. Clair <billstclair@gmail.com>
 -- Some rights reserved.
 -- Distributed under the MIT License
@@ -10,7 +10,7 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.Persistence exposing
+module MinePlace.Persistence exposing
     ( PersistentThing(..)
     , boardIdKey
     , decodePersistentThing
@@ -25,8 +25,8 @@ module JSMaze.Persistence exposing
     , writePlayer
     )
 
-import JSMaze.Board exposing (simpleBoard)
-import JSMaze.EncodeDecode
+import MinePlace.Board exposing (simpleBoard)
+import MinePlace.EncodeDecode
     exposing
         ( boardEncoder
         , decodeBoard
@@ -35,7 +35,7 @@ import JSMaze.EncodeDecode
         , modelEncoder
         , playerEncoder
         )
-import JSMaze.Types
+import MinePlace.Types
     exposing
         ( Board
         , Model

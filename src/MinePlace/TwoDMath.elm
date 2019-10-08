@@ -10,7 +10,7 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.TwoDMath exposing
+module MinePlace.TwoDMath exposing
     ( Rectangle
     , Vector
     , combineVectors
@@ -30,7 +30,7 @@ module JSMaze.TwoDMath exposing
     , zeroVector
     )
 
-import JSMaze.Types exposing (Size)
+import MinePlace.Types exposing (Size)
 
 
 type alias Vector =

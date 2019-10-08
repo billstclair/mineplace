@@ -2,4 +2,4 @@
 
 # Compile the application into site/index.html
 
-elm make src/JSMaze.elm --output site/jsmaze.js
+elm make src/Main.elm --output site/elm.js

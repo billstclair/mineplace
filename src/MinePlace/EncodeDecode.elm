@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 --
 -- EncodeDecode.elm
--- Functions for maintaining the state of the JSMaze board.
+-- Functions for maintaining the state of the MinePlace board.
 -- Copyright (c) 2018 Bill St. Clair <billstclair@gmail.com>
 -- Some rights reserved.
 -- Distributed under the MIT License
@@ -10,7 +10,7 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.EncodeDecode exposing
+module MinePlace.EncodeDecode exposing
     ( boardEncoder
     , boardSpecEncoder
     , decodeBoard
@@ -26,8 +26,11 @@ module JSMaze.EncodeDecode exposing
     )
 
 import Dict exposing (Dict)
-import JSMaze.Board exposing (boardToStrings, setId, stringsToBoard)
-import JSMaze.Types
+import Json.Decode as JD exposing (Decoder)
+import Json.Decode.Pipeline exposing (hardcoded, optional, required)
+import Json.Encode as JE exposing (Value)
+import MinePlace.Board exposing (boardToStrings, setId, stringsToBoard)
+import MinePlace.Types
     exposing
         ( Appearance(..)
         , Board
@@ -57,9 +60,6 @@ import JSMaze.Types
         , directionToString
         , stringToDirection
         )
-import Json.Decode as JD exposing (Decoder)
-import Json.Decode.Pipeline exposing (hardcoded, optional, required)
-import Json.Encode as JE exposing (Value)
 import WebSocketFramework exposing (decodePlist, unknownMessage)
 import WebSocketFramework.EncodeDecode exposing (genericMessageDecoder)
 import WebSocketFramework.ServerInterface as ServerInterface

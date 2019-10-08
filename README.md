@@ -2,7 +2,7 @@
 
 “In that famous mining game, you build a mine. In Mineplace, you live in a mansion.”
 
-It’s pronounced "MINE-place", with the first word being a pun on the personal possessive pronoun and a tunnel where valuable commodities are dug from the ground, and the whole being a curtsy in the direction of MineCraft.
+It’s pronounced "MINE-place", with the first word being a pun on the personal possessive pronoun and a tunnel where valuable commodities are dug from the ground, and the whole being a curtsy in the direction of the fabulously successful networked Java game.
 
 ## History
 

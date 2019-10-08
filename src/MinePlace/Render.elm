@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 --
 -- Render.elm
--- Functions for rendering a JSMaze board.
+-- Functions for rendering a MinePlace board.
 -- Copyright (c) 2018 Bill St. Clair <billstclair@gmail.com>
 -- Some rights reserved.
 -- Distributed under the MIT License
@@ -10,7 +10,7 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.Render exposing
+module MinePlace.Render exposing
     ( getDeltaN
     , render2d
     , render3d
@@ -20,10 +20,10 @@ module JSMaze.Render exposing
 import Array exposing (Array)
 import Debug exposing (log)
 import Html exposing (Html)
-import JSMaze.Board exposing (forwardDelta, getCell)
-import JSMaze.Styles exposing (SClass(..))
-import JSMaze.TwoDMath exposing (Rectangle, Vector)
-import JSMaze.Types
+import MinePlace.Board exposing (forwardDelta, getCell)
+import MinePlace.Styles exposing (SClass(..))
+import MinePlace.TwoDMath exposing (Rectangle, Vector)
+import MinePlace.Types
     exposing
         ( Board
         , BoardSpec

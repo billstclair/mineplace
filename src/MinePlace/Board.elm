@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 --
 -- Board.elm
--- Functions for maintaining the state of the JSMaze board.
+-- Functions for maintaining the state of the MinePlace board.
 -- Copyright (c) 2018 Bill St. Clair <billstclair@gmail.com>
 -- Some rights reserved.
 -- Distributed under the MIT License
@@ -10,7 +10,7 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.Board exposing
+module MinePlace.Board exposing
     ( addPlayer
     , boardToStrings
     , canMove
@@ -33,7 +33,7 @@ module JSMaze.Board exposing
 import Array exposing (Array)
 import Array.Extra as AE
 import Debug exposing (log)
-import JSMaze.Types
+import MinePlace.Types
     exposing
         ( Board
         , BoardSpec

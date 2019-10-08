@@ -10,7 +10,7 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.Entities exposing (checkmark, copyright, nbsp, stringFromCode)
+module MinePlace.Entities exposing (checkmark, copyright, nbsp, stringFromCode)
 
 import Char
 import String

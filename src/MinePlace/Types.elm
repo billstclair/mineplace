@@ -10,7 +10,7 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.Types exposing
+module MinePlace.Types exposing
     ( Appearance(..)
     , Board
     , BoardSpec

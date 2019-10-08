@@ -1,8 +1,8 @@
 ----------------------------------------------------------------------
 --
--- JSMaze.elm
--- Simple maze game. Shared UI. Start from PortMaze or ReactorMaze.
--- Copyright (c) 2018 Bill St. Clair <billstclair@gmail.com>
+-- Main.elm
+-- Top-level for MinePlace application.
+-- Copyright (c) 2018-2019 Bill St. Clair <billstclair@gmail.com>
 -- Some rights reserved.
 -- Distributed under the MIT License
 -- See LICENSE.txt
@@ -10,7 +10,7 @@
 ----------------------------------------------------------------------
 
 
-port module JSMaze exposing (main)
+port module Main exposing (main)
 
 import Browser exposing (Document, UrlRequest)
 import Browser.Dom as Dom exposing (Viewport)
@@ -63,7 +63,12 @@ import Html.Attributes
         , width
         )
 import Html.Events exposing (onClick, onInput)
-import JSMaze.Board as Board
+import Json.Decode as JD exposing (Decoder)
+import Json.Encode as JE exposing (Value)
+import List.Extra as LE
+import Mastodon.PortFunnels as PortFunnels exposing (FunnelDict, Handler(..), State)
+import Mastodon.WebSocket exposing (Event(..), StreamType(..))
+import MinePlace.Board as Board
     exposing
         ( addPlayer
         , canMove
@@ -73,8 +78,8 @@ import JSMaze.Board as Board
         , simpleBoard
         , updatePlayer
         )
-import JSMaze.Entities exposing (copyright, nbsp)
-import JSMaze.Persistence as Persistence
+import MinePlace.Entities exposing (copyright, nbsp)
+import MinePlace.Persistence as Persistence
     exposing
         ( PersistentThing(..)
         , boardIdKey
@@ -85,9 +90,9 @@ import JSMaze.Persistence as Persistence
         , writeModel
         , writePlayer
         )
-import JSMaze.Render exposing (render2d, render3d, renderControls)
-import JSMaze.Styles as Styles
-import JSMaze.Types
+import MinePlace.Render exposing (render2d, render3d, renderControls)
+import MinePlace.Styles as Styles
+import MinePlace.Types
     exposing
         ( Board
         , Direction(..)
@@ -106,11 +111,6 @@ import JSMaze.Types
         , initialPlayer
         , operationToDirection
         )
-import Json.Decode as JD exposing (Decoder)
-import Json.Encode as JE exposing (Value)
-import List.Extra as LE
-import Mastodon.PortFunnels as PortFunnels exposing (FunnelDict, Handler(..), State)
-import Mastodon.WebSocket exposing (Event(..), StreamType(..))
 import PortFunnel.LocalStorage as LocalStorage
 import PortFunnel.WebSocket as WebSocket
 import Svg.Button as Button exposing (Button, normalRepeatTime)

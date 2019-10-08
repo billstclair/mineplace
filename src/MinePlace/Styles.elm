@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 --
 -- Styles.elm
--- The CSS Stylesheet for the JSMaze game.
+-- The CSS Stylesheet for the MinePlace game.
 -- Copyright (c) 2018 Bill St. Clair <billstclair@gmail.com>
 -- Some rights reserved.
 -- Distributed under the MIT License
@@ -10,7 +10,7 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.Styles exposing (SClass(..), class, classes, style)
+module MinePlace.Styles exposing (SClass(..), class, classes, style)
 
 import Css exposing (Sel(..))
 import Html.Attributes

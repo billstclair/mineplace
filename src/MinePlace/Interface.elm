@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------
 --
 -- Interface.elm
--- Processor for JSMaze server.
+-- Processor for MinePlace server.
 -- Copyright (c) 2018 Bill St. Clair <billstclair@gmail.com>
 -- Some rights reserved.
 -- Distributed under the MIT License
@@ -10,15 +10,16 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.Interface exposing
+module MinePlace.Interface exposing
     ( GameState(..)
     , ServerState
     , messageProcessor
     )
 
 import Dict exposing (Dict)
-import JSMaze.Board exposing (simpleBoard)
-import JSMaze.Types
+import List.Extra as LE
+import MinePlace.Board exposing (simpleBoard)
+import MinePlace.Types
     exposing
         ( Appearance(..)
         , Direction(..)
@@ -29,7 +30,6 @@ import JSMaze.Types
         , Message(..)
         , Msg(..)
         )
-import List.Extra as LE
 import Task
 import WebSocketFramework.ServerInterface
     exposing
