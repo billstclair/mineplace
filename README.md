@@ -1,8 +1,14 @@
-# MinePlace.social
+# [MinePlace.social](https://mineplace.social/)
 
 “In that famous mining game, you build a mine. In Mineplace, you live in a mansion.”
 
-It’s pronounced "MINE-place", with the first word being a pun on the personal possessive pronoun and a tunnel where valuable commodities are dug from the ground, and the whole being a curtsy in the direction of the fabulously successful networked Java game.
+It’s pronounced "mine-PLACE", with the first word being a pun on the personal possessive pronoun and a tunnel where valuable commodities are dug from the ground, and the whole being a curtsy in the direction of the fabulously successful networked Java game. You may also think of it in German as "Mein Platz" or French "Ma Place".
+
+MinePlace allows you to interact with others in a physical space that you acquire or build. You can use it with scripting to create games, collect and display images, video, and sculpture, talk or type with visitors, and federate with other places.
+
+My alpha graphics is simple line drawings, but it will use WebGL very soon for realistic three-dimensional rendering.
+
+One hour a day of server connection will always be available for free, at least from my server, but I will charge $1 per month for unlimited server use, with a storage cap that you can exceed with your own S3 account, at Amazon, Digital Ocean, or any S3-compatible server.
 
 ## History
 
@@ -13,6 +19,10 @@ That game was up at [jsmaze.com](jsmaze.com) for many years, but I took it down 
 This project started as a remake, from scratch, in Elm, and has morphed into a federated social media interface for the spatially-oriented.
 
 ## Tech
+
+The client-side code is Elm compiled to JavaScript, which will run in any modern web browser. I'll wrap $0.99 iOS and Android apps around the webapp, but you can always use a mobile browser for free.
+
+The server side is initially Elm on Node.js, using [billstclair/elm-websocket-framework package](http://package.elm-lang.org/packages/billstclair/elm-websocket-framework/latest), but if that doesn't scale well enough, I'll switch to [elm-beam](https://github.com/hkgumbs/elm-beam), if it's up to the task by then.
 
 See [persistence.md](https://github.com/billstclair/elm-jsmaze/blob/master/Persistence.md) for information about how boards and players are persisted.
 
