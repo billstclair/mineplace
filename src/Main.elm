@@ -219,14 +219,19 @@ storageHandler response state model =
                         model.started
             }
 
+        boardKey =
+            boardIdKey currentBoardId
+
+        playerKey =
+            playerIdKey currentBoardId currentPlayerId
+
         cmd =
             if
                 (mdl.started == StartedReadingModel)
                     && (model.started == NotStarted)
             then
                 Cmd.batch
-                    [ Persistence.readThing cmdPort <| boardIdKey currentBoardId
-                    ]
+                    [ Persistence.readThing cmdPort boardKey ]
 
             else
                 Cmd.none
@@ -235,7 +240,15 @@ storageHandler response state model =
         LocalStorage.GetResponse { label, key, value } ->
             case value of
                 Nothing ->
-                    mdl |> withNoCmd
+                    if key == boardKey then
+                        { mdl | layout = NormalLayout }
+                            |> withCmd (Persistence.readThing cmdPort playerKey)
+
+                    else if key == playerKey then
+                        mdl |> withCmd (Persistence.readThing cmdPort modelKey)
+
+                    else
+                        mdl |> withNoCmd
 
                 Just v ->
                     case decodePersistentThing key v of
@@ -254,8 +267,7 @@ storageHandler response state model =
                                         |> withCmds
                                             [ Persistence.readThing
                                                 cmdPort
-                                              <|
-                                                playerIdKey currentBoardId currentPlayerId
+                                                playerKey
                                             ]
 
                                 PersistentPlayer player ->
