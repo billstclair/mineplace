@@ -10,60 +10,73 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.Types
-    exposing
-        ( Appearance(..)
-        , Board
-        , BoardSpec
-        , Cell
-        , Direction(..)
-        , ErrorKind(..)
-        , FullPlayer
-        , Game
-        , GameDescription
-        , GameName
-        , GamePlayer
-        , Image(..)
-        , Layout(..)
-        , Location
-        , Message(..)
-        , Model
-        , Msg(..)
-        , Operation(..)
-        , OwnedPlace
-        , OwnedPlacement
-        , PaintedWall
-        , PaintedWalls
-        , Player
-        , PlayerName
-        , Point
-        , Row
-        , SavedModel
-        , SideImages
-        , StaticImages
-        , Url
-        , WallSpec
-        , Walls
-        , Write(..)
-        , currentBoardId
-        , currentPlayerId
-        , defaultSavedModel
-        , directionToString
-        , initialPlayer
-        , operationToDirection
-        , stringToDirection
-        , sumLocations
-        )
+module JSMaze.Types exposing
+    ( Appearance(..)
+    , Board
+    , BoardSpec
+    , Cell
+    , Direction(..)
+    , ErrorKind(..)
+    , FullPlayer
+    , Game
+    , GameDescription
+    , GameName
+    , GamePlayer
+    , Image(..)
+    , Layout(..)
+    , Location
+    , Message(..)
+    , Model
+    , Msg(..)
+    , Operation(..)
+    , OwnedPlace
+    , OwnedPlacement
+    , PaintedWall
+    , PaintedWalls
+    , Player
+    , PlayerName
+    , Point
+    , Row
+    , SavedModel
+    , SideImages
+    , Size
+    , Started(..)
+    , StaticImages
+    , Url
+    , WallSpec
+    , Walls
+    , WhichButton(..)
+    , Write(..)
+    , currentBoardId
+    , currentPlayerId
+    , defaultSavedModel
+    , directionToString
+    , initialPlayer
+    , operationToDirection
+    , stringToDirection
+    , sumLocations
+    )
 
 import Array exposing (Array)
+import Browser exposing (Document, UrlRequest)
 import Dict exposing (Dict)
-import LocalStorage exposing (LocalStorage)
-import LocalStorage.SharedTypes as LST exposing (Key, Ports, Value)
+import Mastodon.PortFunnels as PortFunnels exposing (FunnelDict, Handler(..), State)
 import Svg.Button as Button exposing (Button)
 import Task exposing (Task)
-import Time exposing (Time)
+import Url
 import WebSocketFramework.Types exposing (GameId, PlayerId)
-import Window exposing (Size)
+
+
+type alias Size =
+    { width : Float
+    , height : Float
+    }
+
+
+type Started
+    = NotStarted
+    | StartedReadingModel
+    | Started
 
 
 type alias Model =
@@ -74,8 +87,9 @@ type alias Model =
     , isTouchAware : Bool
     , forwardButton : Button Operation
     , backButton : Button Operation
-    , subscription : Maybe ( Time, Button.Msg Msg Operation )
-    , storage : LocalStorage Msg
+    , subscription : Maybe ( Float, WhichButton, Button.Msg )
+    , started : Started
+    , funnelState : State Msg
     }
 
 
@@ -95,6 +109,12 @@ type Layout
     | TopViewLayout
     | EditingLayout
     | NoLayout
+
+
+type WhichButton
+    = GoForwardButton
+    | GoBackButton
+    | OtherButton
 
 
 type Operation
@@ -120,12 +140,13 @@ type Write
 type Msg
     = InitialSize Size
     | Resize Size
-    | DownKey Int
-    | ButtonMsg (Button.Msg Msg Operation)
-    | UpdatePorts LST.Operation (Maybe (Ports Msg)) Key Value
+    | DownKey String
+    | ButtonMsg WhichButton Button.Msg
     | DoWrites (List Write)
     | ReceiveTask (Result String Message)
     | Nop
+    | OnUrlRequest UrlRequest
+    | OnUrlChange Url.Url
 
 
 type Direction

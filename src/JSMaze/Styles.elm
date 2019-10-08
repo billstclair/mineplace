@@ -124,7 +124,7 @@ stylesheet =
 
 
 style =
-    Css.style [ Html.Attributes.scoped True ] stylesheet
+    Css.style [] stylesheet
 
 
 

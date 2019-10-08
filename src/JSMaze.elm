@@ -10,8 +10,12 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze exposing (init, prefix, subscriptions, update, view)
+port module JSMaze exposing (main)
 
+import Browser exposing (Document, UrlRequest)
+import Browser.Dom as Dom exposing (Viewport)
+import Browser.Events as Events
+import Browser.Navigation exposing (Key)
 import Char
 import Cmd.Extra exposing (withCmd, withCmds, withNoCmd)
 import Debug exposing (log)
@@ -93,26 +97,35 @@ import JSMaze.Types
         , Msg(..)
         , Operation(..)
         , Player
+        , Size
+        , Started(..)
+        , WhichButton(..)
         , Write(..)
         , currentBoardId
         , currentPlayerId
         , initialPlayer
         , operationToDirection
         )
-import Keyboard exposing (KeyCode)
+import Json.Decode as JD exposing (Decoder)
+import Json.Encode as JE exposing (Value)
 import List.Extra as LE
-import LocalStorage exposing (LocalStorage, setPorts)
-import LocalStorage.DictPorts as DictPorts
-import LocalStorage.SharedTypes exposing (Ports, Value)
+import Mastodon.PortFunnels as PortFunnels exposing (FunnelDict, Handler(..), State)
+import Mastodon.WebSocket exposing (Event(..), StreamType(..))
+import PortFunnel.LocalStorage as LocalStorage
+import PortFunnel.WebSocket as WebSocket
 import Svg.Button as Button exposing (Button, normalRepeatTime)
 import Task
-import Time exposing (Time)
-import Window exposing (Size)
+import Time exposing (Posix)
+import Url exposing (Url)
 
 
 initialSizeCmd : Cmd Msg
 initialSizeCmd =
-    Task.perform (\x -> InitialSize x) Window.size
+    Task.perform
+        (\{ viewport } ->
+            InitialSize <| Size viewport.width viewport.height
+        )
+        Dom.getViewport
 
 
 initialSize : Size
@@ -141,48 +154,142 @@ initialModel =
     { windowSize = initialSize
     , board = { board | id = currentBoardId }
     , player = initialPlayer
-    , layout = NoLayout
+    , layout = NormalLayout
     , isTouchAware = False
     , forwardButton = initialRepeatingButton GoForward
     , backButton = initialRepeatingButton GoBack
     , subscription = Nothing
-    , storage = LocalStorage.make dictPorts prefix
+    , started = NotStarted
+    , funnelState =
+        PortFunnels.initialState
+            { localStoragePrefix = Persistence.prefix
+            , cmdPort = cmdPort
+            , subPort = subPort
+            }
     }
 
 
-dictPorts : Ports Msg
-dictPorts =
-    DictPorts.make UpdatePorts prefix
+port cmdPort : Value -> Cmd msg
 
 
-{-| LocalStorage key prefix.
--}
-prefix : String
-prefix =
-    "jsmaze"
+port subPort : (Value -> msg) -> Sub msg
 
 
-init : Value -> Maybe (Ports Msg) -> ( Model, Cmd Msg )
-init value ports =
+main =
+    Browser.application
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        , onUrlRequest = OnUrlRequest
+        , onUrlChange = OnUrlChange
+        }
+
+
+init : () -> Url -> Key -> ( Model, Cmd Msg )
+init _ url key =
+    initialModel
+        |> withCmd initialSizeCmd
+
+
+storageHandler : LocalStorage.Response -> State Msg -> Model -> ( Model, Cmd Msg )
+storageHandler response state model =
     let
-        storage =
-            case ports of
-                Just p ->
-                    LocalStorage.make p prefix
+        mdl =
+            { model
+                | started =
+                    if
+                        LocalStorage.isLoaded state.storage
+                            && (model.started == NotStarted)
+                    then
+                        StartedReadingModel
 
-                Nothing ->
-                    initialModel.storage
+                    else
+                        model.started
+            }
+
+        cmd =
+            if
+                (mdl.started == StartedReadingModel)
+                    && (model.started == NotStarted)
+            then
+                Cmd.batch
+                    [ Persistence.readThing cmdPort <| boardIdKey currentBoardId
+                    ]
+
+            else
+                Cmd.none
     in
-    { initialModel | storage = storage }
-        |> withCmds
-            [ initialSizeCmd
-            , Persistence.readThing storage <| boardIdKey currentBoardId
-            ]
+    case response of
+        LocalStorage.GetResponse { label, key, value } ->
+            case value of
+                Nothing ->
+                    mdl |> withNoCmd
+
+                Just v ->
+                    case decodePersistentThing key v of
+                        Err _ ->
+                            mdl |> withNoCmd
+
+                        Ok thing ->
+                            case thing of
+                                PersistentBoard board ->
+                                    let
+                                        newBoard =
+                                            addPlayer mdl.player <|
+                                                { board | id = currentBoardId }
+                                    in
+                                    { mdl | board = newBoard }
+                                        |> withCmds
+                                            [ Persistence.readThing
+                                                cmdPort
+                                              <|
+                                                playerIdKey currentBoardId currentPlayerId
+                                            ]
+
+                                PersistentPlayer player ->
+                                    { mdl
+                                        | player = player
+                                        , board =
+                                            removePlayer mdl.player mdl.board
+                                                |> addPlayer player
+                                    }
+                                        |> withCmd
+                                            (Persistence.readThing cmdPort modelKey)
+
+                                PersistentModel savedModel ->
+                                    { mdl | layout = savedModel.layout }
+                                        |> withNoCmd
+
+        _ ->
+            mdl |> withCmd cmd
+
+
+socketHandler : WebSocket.Response -> State Msg -> Model -> ( Model, Cmd Msg )
+socketHandler response state model =
+    -- TODO, see `socketHandler` in ~/elm-mastodon-websocket/example/src/Main.elm
+    model |> withNoCmd
+
+
+{-| The `model` parameter is necessary here for `PortFunnels.makeFunnelDict`.
+-}
+getCmdPort : State Msg -> String -> model -> (Value -> Cmd Msg)
+getCmdPort state moduleName model =
+    cmdPort
+
+
+funnelDict : FunnelDict Model Msg
+funnelDict =
+    PortFunnels.makeFunnelDict
+        [ LocalStorageHandler storageHandler
+        , WebSocketHandler socketHandler
+        ]
+        getCmdPort
 
 
 saveModel : Model -> ( Model, Cmd Msg )
 saveModel model =
-    model |> withCmd (writeModel model model.storage)
+    model |> withCmd (writeModel model cmdPort)
 
 
 editMaze : Model -> ( Model, Cmd Msg )
@@ -213,6 +320,7 @@ getMaze model =
                     | location = ( 0, 0 )
                     , direction = South
                 }
+
             else
                 player
 
@@ -259,7 +367,7 @@ toggleLayout model =
         mdl =
             { model | layout = layout }
     in
-    mdl |> withCmd (writeModel mdl mdl.storage)
+    mdl |> withCmd (writeModel mdl cmdPort)
 
 
 toggleWall : Direction -> Location -> Model -> ( Model, Cmd Msg )
@@ -352,7 +460,7 @@ toggleWall direction location model =
                 mdl =
                     { model | board = nb3 }
             in
-            mdl |> withCmd (writeBoard nb3 mdl.storage)
+            mdl |> withCmd (writeBoard nb3 cmdPort)
 
 
 changeBoardSize : ( Int, Int ) -> Model -> ( Model, Cmd Msg )
@@ -386,17 +494,17 @@ chainWrites writes =
     Task.perform DoWrites <| Task.succeed writes
 
 
-doWrite : Write -> LocalStorage msg -> Cmd msg
-doWrite write storage =
+doWrite : Write -> Cmd msg
+doWrite write =
     case write of
         WriteBoard board ->
-            writeBoard board storage
+            writeBoard board cmdPort
 
         WritePlayer player ->
-            writePlayer player storage
+            writePlayer player cmdPort
 
         WriteModel model ->
-            writeModel model storage
+            writeModel model cmdPort
 
 
 updateButton : Button Operation -> Model -> Model
@@ -410,6 +518,11 @@ updateButton button model =
 
         _ ->
             model
+
+
+dummyButton : Button Operation
+dummyButton =
+    Button.simpleButton ( 0, 0 ) (AddColumn 1)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -427,75 +540,41 @@ update msg model =
                 write :: rest ->
                     model
                         |> withCmds
-                            [ doWrite write model.storage
+                            [ doWrite write
                             , chainWrites rest
                             ]
 
-        UpdatePorts operation ports key value ->
+        ButtonMsg whichButton m ->
             let
-                mdl =
-                    case ports of
-                        Nothing ->
-                            model
+                msgButton =
+                    case whichButton of
+                        OtherButton ->
+                            dummyButton
 
-                        Just p ->
-                            { model
-                                | storage = setPorts p model.storage
-                            }
+                        GoForwardButton ->
+                            model.forwardButton
+
+                        GoBackButton ->
+                            model.backButton
             in
-            if operation /= LocalStorage.SharedTypes.GetItemOperation then
-                mdl |> withNoCmd
-            else
-                case decodePersistentThing key value of
-                    Err _ ->
-                        mdl |> withNoCmd
-
-                    Ok thing ->
-                        case thing of
-                            PersistentBoard board ->
-                                let
-                                    newBoard =
-                                        addPlayer mdl.player <|
-                                            { board | id = currentBoardId }
-                                in
-                                { mdl | board = newBoard }
-                                    |> withCmds
-                                        [ Persistence.readThing
-                                            mdl.storage
-                                          <|
-                                            playerIdKey currentBoardId currentPlayerId
-                                        ]
-
-                            PersistentPlayer player ->
-                                { mdl
-                                    | player = player
-                                    , board =
-                                        removePlayer mdl.player mdl.board
-                                            |> addPlayer player
-                                }
-                                    |> withCmd
-                                        (Persistence.readThing mdl.storage modelKey)
-
-                            PersistentModel savedModel ->
-                                { mdl | layout = savedModel.layout }
-                                    |> withNoCmd
-
-        ButtonMsg msg ->
-            case Button.checkSubscription msg of
-                Just ( time, msg ) ->
+            case Button.checkSubscription m msgButton of
+                Just ( time, m2 ) ->
                     { model
                         | subscription =
                             if time <= 0 then
                                 Nothing
+
                             else
-                                Just ( time, msg )
+                                Just ( time, whichButton, m2 )
                     }
                         |> withNoCmd
 
                 Nothing ->
                     let
                         ( isClick, button, cmd ) =
-                            Button.update msg
+                            Button.update (\bm -> ButtonMsg whichButton bm)
+                                m
+                                msgButton
 
                         operation =
                             Button.getState button
@@ -529,12 +608,13 @@ update msg model =
 
                                     _ ->
                                         let
-                                            m =
+                                            mdl2 =
                                                 movePlayer dir model
                                         in
-                                        m
+                                        mdl2
                                             |> withCmd
-                                                (writePlayer m.player model.storage)
+                                                (writePlayer mdl2.player cmdPort)
+
                             else
                                 model |> withNoCmd
                     in
@@ -543,6 +623,7 @@ update msg model =
                             | isTouchAware =
                                 if Button.isTouchAware button then
                                     True
+
                                 else
                                     mdl.isTouchAware
                         }
@@ -555,12 +636,18 @@ update msg model =
         Resize size ->
             { model | windowSize = size } |> withNoCmd
 
-        DownKey code ->
+        DownKey key ->
             let
                 mdl =
-                    processDownKey code model
+                    processDownKey key model
             in
-            mdl |> withCmd (writePlayer mdl.player mdl.storage)
+            mdl |> withCmd (writePlayer mdl.player cmdPort)
+
+        OnUrlRequest _ ->
+            model |> withNoCmd
+
+        OnUrlChange _ ->
+            model |> withNoCmd
 
         Nop ->
             model |> withNoCmd
@@ -581,6 +668,7 @@ moveDelta dir playerDir =
 
             West ->
                 ( 0, -1 )
+
     else
         case playerDir of
             North ->
@@ -611,6 +699,7 @@ moveDir dir playerDir =
 
             West ->
                 North
+
     else
         case playerDir of
             North ->
@@ -655,13 +744,16 @@ movePlayer dir model =
                 in
                 if canMove loc ( dr, dc ) board then
                     ( ( r + dr, c + dc ), playerDir )
+
                 else
                     ( loc, playerDir )
+
             else
                 ( loc, moveDir dir playerDir )
     in
     if newloc == loc && newdir == playerDir then
         model
+
     else
         let
             newPlayer =
@@ -679,41 +771,42 @@ movePlayer dir model =
         }
 
 
-upChars : List Char
+upChars : List String
 upChars =
-    [ 'i', 'I', 'w', 'W' ]
+    [ "i", "I", "w", "W" ]
 
 
-downChars : List Char
+downChars : List String
 downChars =
-    [ 'k', 'K', 's', 'S' ]
+    [ "k", "K", "s", "S" ]
 
 
-rightChars : List Char
+rightChars : List String
 rightChars =
-    [ 'l', 'L', 'd', 'D' ]
+    [ "l", "L", "d", "D" ]
 
 
-leftChars : List Char
+leftChars : List String
 leftChars =
-    [ 'j', 'J', 'a', 'A' ]
+    [ "j", "J", "a", "A" ]
 
 
-processDownKey : Int -> Model -> Model
-processDownKey code model =
+processDownKey : String -> Model -> Model
+processDownKey key model =
     let
-        char =
-            Char.fromCode code
-
         dir =
-            if List.member char upChars then
+            if List.member key upChars then
                 Just North
-            else if List.member char downChars then
+
+            else if List.member key downChars then
                 Just South
-            else if List.member char rightChars then
+
+            else if List.member key rightChars then
                 Just East
-            else if List.member char leftChars then
+
+            else if List.member key leftChars then
                 Just West
+
             else
                 Nothing
     in
@@ -775,7 +868,7 @@ renderContent model =
             model.windowSize
 
         w =
-            0.9 * toFloat (min ws.width (ws.height * 2 // 3))
+            0.9 * min ws.width (ws.height * 2 / 3)
 
         ta =
             model.isTouchAware
@@ -804,52 +897,63 @@ renderContent model =
         ]
 
 
-view : Model -> Html Msg
+view : Model -> Document Msg
 view model =
-    if model.layout == NoLayout then
-        div [] []
-    else
-        div [ align "center" ]
-            [ Styles.style
-            , h2 []
-                [ text "JSMaze" ]
-            , renderContent model
-            , p []
-                [ text "Use IJKL or WASD to move/rotate."
-                , br
-                , text "Click in the small maze view to make it big."
-                ]
-            , p []
-                [ text "Server coming soon. " ]
-            , p []
-                [ logoLink "https://github.com/billstclair/elm-jsmaze"
-                    "GitHub-Mark-32px.png"
-                    "GitHub source code"
-                    32
-                , space
-                , logoLink "http://elm-lang.org/"
-                    "elm-logo-125x125.png"
-                    "Elm inside"
-                    28
-                , br
-                , text (copyright ++ " 2018 ")
-                , a [ href "https://GibGoyGames.com/" ]
-                    [ text "Gib Goy Games" ]
-                , space
-                , mailLink "GibGoyGames@gmail.com"
+    { title = "MineSpace"
+    , body =
+        if model.layout == NoLayout then
+            [ div [] [] ]
+
+        else
+            [ div [ align "center" ]
+                [ Styles.style
+                , h2 []
+                    [ text "MineSpace" ]
+                , renderContent model
+                , p []
+                    [ text "Use IJKL or WASD to move/rotate."
+                    , br
+                    , text "Click in the small maze view to make it big."
+                    ]
+                , p []
+                    [ text "Server coming soon. " ]
+                , p []
+                    [ logoLink "https://github.com/billstclair/minespace"
+                        "GitHub-Mark-32px.png"
+                        "GitHub source code"
+                        32
+                    , space
+                    , logoLink "http://elm-lang.org/"
+                        "elm-logo-125x125.png"
+                        "Elm inside"
+                        28
+                    , br
+                    , text (copyright ++ " 2018 ")
+                    , a [ href "https://GibGoyGames.com/" ]
+                        [ text "Gib Goy Games" ]
+                    , space
+                    , mailLink "GibGoyGames@gmail.com"
+                    ]
                 ]
             ]
+    }
+
+
+keyDecoder : Decoder Msg
+keyDecoder =
+    JD.field "key" JD.string
+        |> JD.map DownKey
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Window.resizes Resize
-        , Keyboard.downs DownKey
+        [ Events.onResize (\w h -> Resize <| Size (toFloat w) (toFloat h))
+        , Events.onKeyDown keyDecoder
         , case model.subscription of
             Nothing ->
                 Sub.none
 
-            Just ( time, msg ) ->
-                Time.every time (\_ -> ButtonMsg msg)
+            Just ( time, whichButton, msg ) ->
+                Time.every time (\_ -> ButtonMsg whichButton msg)
         ]

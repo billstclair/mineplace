@@ -10,21 +10,20 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.EncodeDecode
-    exposing
-        ( boardEncoder
-        , boardSpecEncoder
-        , decodeBoard
-        , decodeBoardSpec
-        , decodeModel
-        , decodePlayer
-        , messageDecoder
-        , messageEncoder
-        , modelEncoder
-        , playerEncoder
-        , stringToValue
-        , valueToString
-        )
+module JSMaze.EncodeDecode exposing
+    ( boardEncoder
+    , boardSpecEncoder
+    , decodeBoard
+    , decodeBoardSpec
+    , decodeModel
+    , decodePlayer
+    , messageDecoder
+    , messageEncoder
+    , modelEncoder
+    , playerEncoder
+    , stringToValue
+    , valueToString
+    )
 
 import Dict exposing (Dict)
 import JSMaze.Board exposing (boardToStrings, setId, stringsToBoard)
@@ -59,7 +58,7 @@ import JSMaze.Types
         , stringToDirection
         )
 import Json.Decode as JD exposing (Decoder)
-import Json.Decode.Pipeline exposing (decode, hardcoded, optional, required)
+import Json.Decode.Pipeline exposing (hardcoded, optional, required)
 import Json.Encode as JE exposing (Value)
 import WebSocketFramework exposing (decodePlist, unknownMessage)
 import WebSocketFramework.EncodeDecode exposing (genericMessageDecoder)
@@ -137,9 +136,19 @@ modelDecoder =
         (JD.field "layout" layoutDecoder)
 
 
+decodeValue : Decoder a -> Value -> Result String a
+decodeValue decoder value =
+    case JD.decodeValue decoder value of
+        Ok a ->
+            Ok a
+
+        Err err ->
+            Err <| JD.errorToString err
+
+
 decodeModel : Value -> Result String SavedModel
 decodeModel value =
-    JD.decodeValue modelDecoder value
+    decodeValue modelDecoder value
 
 
 boardEncoder : Board -> Value
@@ -153,8 +162,7 @@ boardEncoder board =
 boardSpecEncoder : Board -> Value
 boardSpecEncoder board =
     boardToStrings board
-        |> List.map JE.string
-        |> JE.list
+        |> JE.list JE.string
 
 
 boardSpecDecoder : Decoder Board
@@ -173,12 +181,12 @@ boardDecoder =
 
 decodeBoard : Value -> Result String Board
 decodeBoard value =
-    JD.decodeValue boardDecoder value
+    decodeValue boardDecoder value
 
 
 decodeBoardSpec : Value -> Result String Board
 decodeBoardSpec value =
-    JD.decodeValue boardSpecDecoder value
+    decodeValue boardSpecDecoder value
 
 
 locationEncoder : Location -> Value
@@ -191,7 +199,7 @@ locationEncoder ( x, y ) =
 
 locationDecoder : Decoder Location
 locationDecoder =
-    JD.map2 (,)
+    JD.map2 (\a b -> ( a, b ))
         (JD.field "x" JD.int)
         (JD.field "y" JD.int)
 
@@ -238,7 +246,7 @@ playerDecoder =
 
 decodePlayer : Value -> Result String Player
 decodePlayer value =
-    JD.decodeValue playerDecoder value
+    decodeValue playerDecoder value
 
 
 
@@ -247,7 +255,7 @@ decodePlayer value =
 
 pointEncoder : Point -> Value
 pointEncoder ( x, y ) =
-    JE.list [ JE.float x, JE.float y ]
+    JE.list JE.float [ x, y ]
 
 
 pointDecoder : Decoder Point
@@ -275,14 +283,7 @@ imageEncoder image =
         VectorImage pointLists ->
             JE.object
                 [ ( "VectorImage"
-                  , JE.list
-                        (List.map
-                            (\points ->
-                                JE.list <|
-                                    List.map pointEncoder points
-                            )
-                            pointLists
-                        )
+                  , JE.list identity <| List.map (JE.list pointEncoder) pointLists
                   )
                 ]
 
@@ -300,16 +301,16 @@ imageDecoder =
 sideImagesEncoder : SideImages -> Value
 sideImagesEncoder images =
     JE.object
-        [ ( "front", JE.list <| List.map imageEncoder images.front )
-        , ( "back", JE.list <| List.map imageEncoder images.back )
-        , ( "left", JE.list <| List.map imageEncoder images.left )
-        , ( "right", JE.list <| List.map imageEncoder images.right )
+        [ ( "front", JE.list imageEncoder images.front )
+        , ( "back", JE.list imageEncoder images.back )
+        , ( "left", JE.list imageEncoder images.left )
+        , ( "right", JE.list imageEncoder images.right )
         ]
 
 
 sideImagesDecoder : Decoder SideImages
 sideImagesDecoder =
-    decode SideImages
+    JD.succeed SideImages
         |> required "front" (JD.list imageDecoder)
         |> required "back" (JD.list imageDecoder)
         |> required "left" (JD.list imageDecoder)
@@ -328,7 +329,7 @@ staticImagesEncoder { front, back, left, right } =
 
 staticImagesDecoder : Decoder StaticImages
 staticImagesDecoder =
-    decode StaticImages
+    JD.succeed StaticImages
         |> required "front" imageDecoder
         |> required "back" imageDecoder
         |> required "left" imageDecoder
@@ -379,7 +380,7 @@ fullPlayerEncoder player =
 
 fullPlayerDecoder : Decoder FullPlayer
 fullPlayerDecoder =
-    decode FullPlayer
+    JD.succeed FullPlayer
         |> required "id" JD.string
         |> required "name" JD.string
         |> required "appearance" appearanceDecoder
@@ -399,7 +400,7 @@ paintedWallEncoder image =
 
 paintedWallDecoder : Decoder PaintedWall
 paintedWallDecoder =
-    decode PaintedWall
+    JD.succeed PaintedWall
         |> required "owner" JD.string
         |> required "location" locationDecoder
         |> required "direction" directionDecoder
@@ -420,16 +421,12 @@ gameEncoder game =
         , ( "owner", JE.string game.owner )
         , ( "board", boardEncoder game.board )
         , ( "players"
-          , JE.list
-                (List.map fullPlayerEncoder <|
-                    Dict.values game.playerDict
-                )
+          , JE.list fullPlayerEncoder <|
+                Dict.values game.playerDict
           )
         , ( "walls"
-          , JE.list
-                (List.map paintedWallEncoder <|
-                    List.concat (Dict.values game.wallsDict)
-                )
+          , JE.list paintedWallEncoder <|
+                List.concat (Dict.values game.wallsDict)
           )
         ]
 
@@ -445,8 +442,8 @@ makeGame id name description owner board players walls =
                             Nothing ->
                                 [ player.name ]
 
-                            Just players ->
-                                player.name :: players
+                            Just playrs ->
+                                player.name :: playrs
                         )
                         dict
                 )
@@ -461,8 +458,8 @@ makeGame id name description owner board players walls =
                             Nothing ->
                                 [ wall ]
 
-                            Just walls ->
-                                wall :: walls
+                            Just ws ->
+                                wall :: ws
                         )
                         dict
                 )
@@ -484,7 +481,7 @@ makeGame id name description owner board players walls =
 
 gameDecoder : Decoder Game
 gameDecoder =
-    decode makeGame
+    JD.succeed makeGame
         |> required "id" JD.string
         |> required "name" JD.string
         |> required "description" JD.string
@@ -505,7 +502,7 @@ gameDescriptionEncoder description =
 
 gameDescriptionDecoder : Decoder GameDescription
 gameDescriptionDecoder =
-    decode GameDescription
+    JD.succeed GameDescription
         |> required "name" JD.string
         |> required "description" JD.string
         |> required "owner" JD.string
@@ -521,7 +518,7 @@ gamePlayerEncoder player =
 
 gamePlayerDecoder : Decoder GamePlayer
 gamePlayerDecoder =
-    decode GamePlayer
+    JD.succeed GamePlayer
         |> required "player" JD.string
         |> required "gameid" JD.string
 
@@ -536,7 +533,7 @@ ownedPlaceEncoder place =
 
 ownedPlaceDecoder : Decoder OwnedPlace
 ownedPlaceDecoder =
-    decode OwnedPlace
+    JD.succeed OwnedPlace
         |> required "player" gamePlayerDecoder
         |> required "location" locationDecoder
 
@@ -552,7 +549,7 @@ ownedPlacementEncoder place =
 
 ownedPlacementDecoder : Decoder OwnedPlacement
 ownedPlacementDecoder =
-    decode OwnedPlacement
+    JD.succeed OwnedPlacement
         |> required "player" gamePlayerDecoder
         |> required "location" locationDecoder
         |> required "direction" directionDecoder
@@ -624,8 +621,8 @@ maybeNull encoder ma =
 
 
 messageEncoder : MessageEncoder Message
-messageEncoder message =
-    case message of
+messageEncoder msg =
+    case msg of
         PingReq { message } ->
             ( Req "ping"
             , [ ( "message", JE.string message ) ]
@@ -662,7 +659,7 @@ messageEncoder message =
                         JE.string gameid
                 )
               , ( "allGames"
-                , JE.list (List.map gamePlayerEncoder allGames)
+                , JE.list gamePlayerEncoder allGames
                 )
               ]
             )
@@ -675,7 +672,7 @@ messageEncoder message =
         LogoutRsp { players } ->
             ( Rsp "logout"
             , [ ( "players"
-                , JE.list (List.map gamePlayerEncoder players)
+                , JE.list gamePlayerEncoder players
                 )
               ]
             )
@@ -800,7 +797,7 @@ pingReqDecoder =
 
 loginWithPasswordReqDecoder : Decoder Message
 loginWithPasswordReqDecoder =
-    decode
+    JD.succeed
         (\userid passwordHash ->
             LoginWithPasswordReq
                 { userid = userid
@@ -813,7 +810,7 @@ loginWithPasswordReqDecoder =
 
 logoutReqDecoder : Decoder Message
 logoutReqDecoder =
-    decode
+    JD.succeed
         (\playerid ->
             LogoutReq { playerid = playerid }
         )
@@ -822,7 +819,7 @@ logoutReqDecoder =
 
 joinGameReqDecoder : Decoder Message
 joinGameReqDecoder =
-    decode
+    JD.succeed
         (\playerid player ->
             JoinGameReq
                 { playerid = playerid
@@ -835,7 +832,7 @@ joinGameReqDecoder =
 
 newGameReqDecoder : Decoder Message
 newGameReqDecoder =
-    decode
+    JD.succeed
         (\playerid game ->
             NewGameReq
                 { playerid = playerid
@@ -848,7 +845,7 @@ newGameReqDecoder =
 
 leaveReqDecoder : Decoder Message
 leaveReqDecoder =
-    decode
+    JD.succeed
         (\playerid player ->
             LeaveReq
                 { playerid = playerid
@@ -861,7 +858,7 @@ leaveReqDecoder =
 
 exitReqDecoder : Decoder Message
 exitReqDecoder =
-    decode
+    JD.succeed
         (\playerid player ->
             ExitReq
                 { playerid = playerid
@@ -874,7 +871,7 @@ exitReqDecoder =
 
 moveReqDecoder : Decoder Message
 moveReqDecoder =
-    decode
+    JD.succeed
         (\playerid player location direction ->
             MoveReq
                 { playerid = playerid
@@ -901,7 +898,7 @@ pongRspDecoder =
 
 errorRspDecoder : Decoder Message
 errorRspDecoder =
-    decode
+    JD.succeed
         (\error message ->
             ErrorRsp
                 { error = error
@@ -914,7 +911,7 @@ errorRspDecoder =
 
 loginRspDecoder : Decoder Message
 loginRspDecoder =
-    decode
+    JD.succeed
         (\playerid currentGame allGames ->
             LoginRsp
                 { playerid = playerid
@@ -929,7 +926,7 @@ loginRspDecoder =
 
 logoutRspDecoder : Decoder Message
 logoutRspDecoder =
-    decode
+    JD.succeed
         (\players ->
             LogoutRsp { players = players }
         )
@@ -938,7 +935,7 @@ logoutRspDecoder =
 
 joinGameRspDecoder : Decoder Message
 joinGameRspDecoder =
-    decode
+    JD.succeed
         (\player game ->
             JoinGameRsp
                 { player = player
@@ -951,7 +948,7 @@ joinGameRspDecoder =
 
 joinGameNotificationRspDecoder : Decoder Message
 joinGameNotificationRspDecoder =
-    decode
+    JD.succeed
         (\player location direction ->
             JoinGameNotificationRsp
                 { player = player
@@ -966,7 +963,7 @@ joinGameNotificationRspDecoder =
 
 leaveRspDecoder : Decoder Message
 leaveRspDecoder =
-    decode
+    JD.succeed
         (\player ->
             LeaveRsp
                 { player = player
@@ -977,7 +974,7 @@ leaveRspDecoder =
 
 exitRspDecoder : Decoder Message
 exitRspDecoder =
-    decode
+    JD.succeed
         (\player ->
             ExitRsp
                 { player = player
@@ -988,7 +985,7 @@ exitRspDecoder =
 
 moveRspDecoder : Decoder Message
 moveRspDecoder =
-    decode
+    JD.succeed
         (\player location direction ->
             MoveRsp
                 { player = player

@@ -10,13 +10,12 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.Render
-    exposing
-        ( getDeltaN
-        , render2d
-        , render3d
-        , renderControls
-        )
+module JSMaze.Render exposing
+    ( getDeltaN
+    , render2d
+    , render3d
+    , renderControls
+    )
 
 import Array exposing (Array)
 import Debug exposing (log)
@@ -38,9 +37,9 @@ import JSMaze.Types
         , Row
         , WallSpec
         , Walls
+        , WhichButton(..)
         , sumLocations
         )
-import Keyboard exposing (KeyCode)
 import Svg exposing (Svg, g, image, line, rect, svg)
 import Svg.Attributes
     exposing
@@ -90,6 +89,7 @@ render2d forEditing isTouchAware w withToggleButton player board =
         extra =
             if forEditing then
                 0.5
+
             else
                 0
 
@@ -112,15 +112,15 @@ render2d forEditing isTouchAware w withToggleButton player board =
             outerh + addcolw
     in
     svg
-        [ width <| toString w
-        , height <| toString h
+        [ width <| fts w
+        , height <| fts h
         ]
         [ rect
             [ class "SvgBorder"
             , x "1"
             , y "1"
-            , width <| toString (outerw - 2)
-            , height <| toString (outerh - 2)
+            , width <| fts (outerw - 2)
+            , height <| fts (outerh - 2)
             ]
             []
         , g [ class "SvgLine" ] <|
@@ -129,32 +129,34 @@ render2d forEditing isTouchAware w withToggleButton player board =
                 (Array.toList board.contents)
         , if not forEditing then
             g [] []
+
           else
             g []
                 [ Button.render
                     ( outerw - 2, 0 )
                     (TextContent "+")
-                    ButtonMsg
+                    (ButtonMsg OtherButton)
                     (simpleButton addcolSize (AddColumn 1) isTouchAware)
                 , Button.render
                     ( outerw - 2, addcolw - 2 )
                     (TextContent "-")
-                    ButtonMsg
+                    (ButtonMsg OtherButton)
                     (simpleButton addcolSize (AddColumn -1) isTouchAware)
                 , Button.render
                     ( 0, outerh - 2 )
                     (TextContent "+")
-                    ButtonMsg
+                    (ButtonMsg OtherButton)
                     (simpleButton addcolSize (AddRow 1) isTouchAware)
                 , Button.render
                     ( addcolw - 2, outerh - 2 )
                     (TextContent "-")
-                    ButtonMsg
+                    (ButtonMsg OtherButton)
                     (simpleButton addcolSize (AddRow -1) isTouchAware)
                 ]
         , render2dPlayer delta player
         , if withToggleButton then
             renderToggleButton isTouchAware w h
+
           else
             g [] []
         ]
@@ -187,10 +189,10 @@ render2dCell isTouchAware forEditing delta rowidx colidx cell =
             delta * toFloat rowidx
 
         x1s =
-            toString x1f
+            fts x1f
 
         y1s =
-            toString y1f
+            fts y1f
 
         h =
             delta / 2
@@ -199,19 +201,19 @@ render2dCell isTouchAware forEditing delta rowidx colidx cell =
             h / 2
 
         x1fmq =
-            toString <| x1f - q
+            fts <| x1f - q
 
         x1fpq =
-            toString <| x1f + q
+            fts <| x1f + q
 
         y1fmq =
-            toString <| y1f - q
+            fts <| y1f - q
 
         y1fpq =
-            toString <| y1f + q
+            fts <| y1f + q
 
         hs =
-            toString h
+            fts h
 
         g0 =
             g [] []
@@ -233,6 +235,7 @@ render2dCell isTouchAware forEditing delta rowidx colidx cell =
                         h
                         h
                     ]
+
             else
                 g0
 
@@ -253,6 +256,7 @@ render2dCell isTouchAware forEditing delta rowidx colidx cell =
                         h
                         h
                     ]
+
             else
                 g0
 
@@ -260,11 +264,12 @@ render2dCell isTouchAware forEditing delta rowidx colidx cell =
             if north && rowidx > 0 then
                 Svg.line
                     [ x1 x1s
-                    , x2 (toString <| x1f + delta)
+                    , x2 (fts <| x1f + delta)
                     , y1 y1s
                     , y2 y1s
                     ]
                     []
+
             else
                 g0
 
@@ -274,17 +279,20 @@ render2dCell isTouchAware forEditing delta rowidx colidx cell =
                     [ x1 x1s
                     , x2 x1s
                     , y1 y1s
-                    , y2 (toString <| y1f + delta)
+                    , y2 (fts <| y1f + delta)
                     ]
                     []
+
             else
                 g0
     in
     if north || forEditing then
         if west || forEditing then
             g [] [ northLine, westLine, northButton, westButton ]
+
         else
             northLine
+
     else
         westLine
 
@@ -310,27 +318,30 @@ render2dPlayer delta player =
         y =
             delta * toFloat r
 
-        ( x1f, y1f, x2f, y2f, x3f, y3f ) =
+        ( ( x1f, y1f ), ( x2f, y2f ), ( x3f, y3f ) ) =
             case player.direction of
                 North ->
-                    ( delta - t, delta - q, t, delta - q, h, q )
+                    ( ( delta - t, delta - q ), ( t, delta - q ), ( h, q ) )
 
                 South ->
-                    ( t, q, delta - t, q, h, delta - q )
+                    ( ( t, q ), ( delta - t, q ), ( h, delta - q ) )
 
                 East ->
-                    ( q, delta - t, q, t, delta - q, h )
+                    ( ( q, delta - t ), ( q, t ), ( delta - q, h ) )
 
                 West ->
-                    ( delta - q, t, delta - q, delta - t, q, h )
+                    ( ( delta - q, t ), ( delta - q, delta - t ), ( q, h ) )
 
-        ( x1s, y1s, x2s, y2s, x3s, y3s ) =
-            ( toString <| x + x1f
-            , toString <| y + y1f
-            , toString <| x + x2f
-            , toString <| y + y2f
-            , toString <| x + x3f
-            , toString <| y + y3f
+        ( ( x1s, y1s ), ( x2s, y2s ), ( x3s, y3s ) ) =
+            ( ( fts <| x + x1f
+              , fts <| y + y1f
+              )
+            , ( fts <| x + x2f
+              , fts <| y + y2f
+              )
+            , ( fts <| x + x3f
+              , fts <| y + y3f
+              )
             )
 
         p1 =
@@ -359,7 +370,7 @@ renderOverlayButton operation isTouchAware width height =
         button =
             simpleButton ( width, height ) operation isTouchAware
     in
-    Button.renderOverlay ButtonMsg button
+    Button.renderOverlay (ButtonMsg OtherButton) button
 
 
 vanishingDistance : Int
@@ -386,14 +397,15 @@ sumXn : Float -> Int -> Float
 sumXn x n =
     if n == 0 then
         0
+
     else
         let
-            loop =
-                \i xn res ->
-                    if i <= 0 then
-                        res
-                    else
-                        loop (i - 1) (xn * x) (res + xn)
+            loop i xn res =
+                if i <= 0 then
+                    res
+
+                else
+                    loop (i - 1) (xn * x) (res + xn)
         in
         loop n x 0
 
@@ -453,94 +465,97 @@ computeRenderCells size player board =
         loc =
             player.location
 
-        ( delta, leftd, rightd, getl, getr, getf ) =
+        ( ( delta, leftd, rightd ), ( getl, getr, getf ) ) =
             forwardDelta dir
 
-        ( dl, _, _, _, getlr, _ ) =
+        ( ( dl, _, _ ), ( _, getlr, _ ) ) =
             forwardDelta leftd
 
-        ( dr, _, _, getrl, _, _ ) =
+        ( ( dr, _, _ ), ( getrl, _, _ ) ) =
             forwardDelta rightd
 
         loop : Int -> Float -> Location -> List RenderCell -> List RenderCell
-        loop =
-            \n lastdn loc res ->
-                case getCell loc board of
-                    Nothing ->
-                        List.reverse res
+        loop n lastdn lo res =
+            case getCell lo board of
+                Nothing ->
+                    List.reverse res
 
-                    Just cell ->
-                        let
-                            dn =
-                                getDeltaN size n
+                Just cell ->
+                    let
+                        dn =
+                            getDeltaN size n
 
-                            walls =
-                                cell.walls
+                        walls =
+                            cell.walls
 
-                            left =
-                                getl walls
+                        left =
+                            getl walls
 
-                            right =
-                                getr walls
+                        right =
+                            getr walls
 
-                            locl =
-                                sumLocations loc dl
+                        locl =
+                            sumLocations lo dl
 
-                            locr =
-                                sumLocations loc dr
+                        locr =
+                            sumLocations lo dr
 
-                            leftright =
-                                if left then
-                                    False
-                                else
-                                    case getCell locl board of
-                                        Nothing ->
-                                            False
+                        leftright =
+                            if left then
+                                False
 
-                                        Just lc ->
-                                            getlr lc.walls
+                            else
+                                case getCell locl board of
+                                    Nothing ->
+                                        False
 
-                            rightleft =
-                                if right then
-                                    False
-                                else
-                                    case getCell locr board of
-                                        Nothing ->
-                                            False
+                                    Just lc ->
+                                        getlr lc.walls
 
-                                        Just rc ->
-                                            getrl rc.walls
+                        rightleft =
+                            if right then
+                                False
 
-                            end =
-                                getf walls
+                            else
+                                case getCell locr board of
+                                    Nothing ->
+                                        False
 
-                            renderCell =
-                                { n = n
-                                , lastdn = lastdn
-                                , dn = dn
-                                , left = left
-                                , right = right
-                                , leftright = leftright
-                                , rightleft = rightleft
-                                , end = end
-                                }
+                                    Just rc ->
+                                        getrl rc.walls
 
-                            nextloc =
-                                sumLocations loc delta
+                        end =
+                            getf walls
 
-                            nextres =
-                                renderCell :: res
-                        in
-                        if end then
-                            List.reverse nextres
-                        else
-                            loop (n + 1) dn nextloc nextres
+                        renderCell =
+                            { n = n
+                            , lastdn = lastdn
+                            , dn = dn
+                            , left = left
+                            , right = right
+                            , leftright = leftright
+                            , rightleft = rightleft
+                            , end = end
+                            }
+
+                        nextloc =
+                            sumLocations lo delta
+
+                        nextres =
+                            renderCell :: res
+                    in
+                    if end then
+                        List.reverse nextres
+
+                    else
+                        loop (n + 1) dn nextloc nextres
     in
     loop 1 0 loc []
 
 
-ts =
-    toString
+fts : Float -> String
+fts =
+    String.fromFloat
 
 
 render3dCell : Float -> RenderCell -> List (Svg Msg)
@@ -556,41 +571,44 @@ render3dCell w cell =
             cell.end
 
         ( lltx, llty ) =
-            ( ts ldn, ts ldn )
+            ( fts ldn, fts ldn )
 
         ( llbx, llby ) =
-            ( ts ldn, ts <| w - ldn )
+            ( fts ldn, fts <| w - ldn )
 
         ( ltx, lty ) =
-            ( ts dn, ts dn )
+            ( fts dn, fts dn )
 
         ( lbx, lby ) =
-            ( ts dn, ts <| w - dn )
+            ( fts dn, fts <| w - dn )
 
         ( rltx, rlty ) =
-            ( ts <| w - ldn, ts ldn )
+            ( fts <| w - ldn, fts ldn )
 
         ( rlbx, rlby ) =
-            ( ts <| w - ldn, ts <| w - ldn )
+            ( fts <| w - ldn, fts <| w - ldn )
 
         ( rtx, rty ) =
-            ( ts <| w - dn, ts dn )
+            ( fts <| w - dn, fts dn )
 
         ( rbx, rby ) =
-            ( ts <| w - dn, ts <| w - dn )
+            ( fts <| w - dn, fts <| w - dn )
     in
     [ if cell.left then
         [ Svg.line [ x1 lltx, y1 llty, x2 ltx, y2 lty ] []
         , Svg.line [ x1 llbx, y1 llby, x2 lbx, y2 lby ] []
         , if end then
             Svg.line [ x1 ltx, y1 lty, x2 lbx, y2 lby ] []
+
           else
             g [] []
         ]
+
       else
         [ Svg.line [ x1 lltx, y1 llty, x2 llbx, y2 llby ] []
         , if not end then
             Svg.line [ x1 ltx, y1 lty, x2 lbx, y2 lby ] []
+
           else
             g [] []
         ]
@@ -598,15 +616,17 @@ render3dCell w cell =
         [ Svg.line [ x1 ltx, y1 lty, x2 lltx, y2 lty ] []
         , Svg.line [ x1 lbx, y1 lby, x2 llbx, y2 lby ] []
         ]
+
       else if not cell.left then
         let
             tx =
-                ts (dn - (0.25 * (dn - ldn)))
+                fts (dn - (0.25 * (dn - ldn)))
         in
         [ Svg.line [ x1 ltx, y1 lty, x2 tx, y2 lty ] []
         , Svg.line [ x1 tx, y1 lty, x2 tx, y2 lby ] []
         , Svg.line [ x1 tx, y1 lby, x2 lbx, y2 lby ] []
         ]
+
       else
         []
     , if cell.right then
@@ -614,13 +634,16 @@ render3dCell w cell =
         , Svg.line [ x1 rlbx, y1 rlby, x2 rbx, y2 rby ] []
         , if end then
             Svg.line [ x1 rtx, y1 rty, x2 rbx, y2 rby ] []
+
           else
             g [] []
         ]
+
       else
         [ Svg.line [ x1 rltx, y1 rlty, x2 rlbx, y2 rlby ] []
         , if not end then
             Svg.line [ x1 rtx, y1 rty, x2 rbx, y2 rby ] []
+
           else
             g [] []
         ]
@@ -628,21 +651,24 @@ render3dCell w cell =
         [ Svg.line [ x1 rtx, y1 rty, x2 rltx, y2 rty ] []
         , Svg.line [ x1 rbx, y1 rby, x2 rlbx, y2 rby ] []
         ]
+
       else if not cell.right then
         let
             tx =
-                ts (w - dn + (0.25 * (dn - ldn)))
+                fts (w - dn + (0.25 * (dn - ldn)))
         in
         [ Svg.line [ x1 rtx, y1 rty, x2 tx, y2 rty ] []
         , Svg.line [ x1 tx, y1 rty, x2 tx, y2 rby ] []
         , Svg.line [ x1 tx, y1 rby, x2 rbx, y2 rby ] []
         ]
+
       else
         []
     , if end then
         [ Svg.line [ x1 ltx, y1 lty, x2 rtx, y2 rty ] []
         , Svg.line [ x1 lbx, y1 lby, x2 rbx, y2 rby ] []
         ]
+
       else
         []
     ]
@@ -653,10 +679,10 @@ render3d : Bool -> Float -> Bool -> Player -> Board -> Html Msg
 render3d isTouchAware w withToggleButton player board =
     let
         ws =
-            toString w
+            fts w
 
         wm2s =
-            toString (w - 2)
+            fts (w - 2)
 
         renderCells =
             computeRenderCells w player board
@@ -680,6 +706,7 @@ render3d isTouchAware w withToggleButton player board =
             cells
         , if withToggleButton then
             renderToggleButton isTouchAware w w
+
           else
             g [] []
         ]
@@ -703,17 +730,18 @@ renderControls : Float -> Bool -> Layout -> Button Operation -> Button Operation
 renderControls w isTouchAware layout forwardButton reverseButton =
     let
         ws =
-            toString w
+            fts w
 
         bw =
             w / 2
 
         bw3s =
-            toString (bw * 3)
+            fts (bw * 3)
 
         leftRightY =
             if layout == NormalLayout then
                 bw / 2 + 2
+
             else
                 2
 
@@ -728,22 +756,22 @@ renderControls w isTouchAware layout forwardButton reverseButton =
         [ Button.render
             ( 2, leftRightY )
             (TextContent "<")
-            ButtonMsg
+            (ButtonMsg OtherButton)
             (simpleButton size TurnLeft isTouchAware)
         , Button.render
             ( 2 * bw - 2, leftRightY )
             (TextContent ">")
-            ButtonMsg
+            (ButtonMsg OtherButton)
             (simpleButton size TurnRight isTouchAware)
         , Button.render
             ( bw, 2 )
             (TextContent "^")
-            ButtonMsg
+            (ButtonMsg GoForwardButton)
             (setSize size forwardButton)
         , Button.render
             ( bw, bw )
             (TextContent "v")
-            ButtonMsg
+            (ButtonMsg GoBackButton)
             (setSize size reverseButton)
         , case layout of
             TopViewLayout ->
@@ -751,12 +779,12 @@ renderControls w isTouchAware layout forwardButton reverseButton =
                     [ Button.render
                         ( 2, bw )
                         (TextContent "Edit")
-                        ButtonMsg
+                        (ButtonMsg OtherButton)
                         (simpleButton size EditMaze isTouchAware)
                     , Button.render
                         ( 2 * bw - 2, bw )
                         (TextContent "Get")
-                        ButtonMsg
+                        (ButtonMsg OtherButton)
                         (simpleButton size GetMaze isTouchAware)
                     ]
 
@@ -765,12 +793,12 @@ renderControls w isTouchAware layout forwardButton reverseButton =
                     [ Button.render
                         ( 2, bw )
                         (TextContent "Save")
-                        ButtonMsg
+                        (ButtonMsg OtherButton)
                         (simpleButton size SaveMaze isTouchAware)
                     , Button.render
                         ( 2 * bw - 2, bw )
                         (TextContent "Init")
-                        ButtonMsg
+                        (ButtonMsg OtherButton)
                         (simpleButton size GetMaze isTouchAware)
                     ]
 

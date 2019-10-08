@@ -10,20 +10,20 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.Persistence
-    exposing
-        ( PersistentThing(..)
-        , boardIdKey
-        , decodePersistentThing
-        , modelKey
-        , playerIdKey
-        , readAllBoardIds
-        , readAllBoardPlayerIds
-        , readThing
-        , writeBoard
-        , writeModel
-        , writePlayer
-        )
+module JSMaze.Persistence exposing
+    ( PersistentThing(..)
+    , boardIdKey
+    , decodePersistentThing
+    , modelKey
+    , playerIdKey
+    , prefix
+    , readAllBoardIds
+    , readAllBoardPlayerIds
+    , readThing
+    , writeBoard
+    , writeModel
+    , writePlayer
+    )
 
 import JSMaze.Board exposing (simpleBoard)
 import JSMaze.EncodeDecode
@@ -47,9 +47,21 @@ import JSMaze.Types
         , defaultSavedModel
         , initialPlayer
         )
-import Json.Encode as JE exposing (Value)
-import LocalStorage exposing (LocalStorage, getItem, listKeys, setItem)
-import LocalStorage.SharedTypes exposing (Key)
+import PortFunnel.LocalStorage as LocalStorage exposing (Key, Message, Value)
+
+
+{-| LocalStorage key prefix.
+-}
+prefix : String
+prefix =
+    "jsmaze"
+
+
+{-| We don't do simulated storage, so this doesn't need to be in the model.
+-}
+state : LocalStorage.State
+state =
+    LocalStorage.initialState prefix
 
 
 modelKey : String
@@ -57,10 +69,17 @@ modelKey =
     "M:"
 
 
-writeModel : Model -> LocalStorage msg -> Cmd msg
-writeModel model storage =
+send : (Value -> Cmd msg) -> Message -> Cmd msg
+send cmdPort message =
+    LocalStorage.send cmdPort message state
+
+
+writeModel : Model -> (Value -> Cmd msg) -> Cmd msg
+writeModel model cmdPort =
     modelEncoder model
-        |> setItem storage modelKey
+        |> Just
+        |> LocalStorage.put modelKey
+        |> send cmdPort
 
 
 playerKey : Player -> String
@@ -83,31 +102,38 @@ boardIdKey id =
     "B:" ++ id
 
 
-readAllBoardIds : LocalStorage msg -> Cmd msg
-readAllBoardIds storage =
-    listKeys storage "B:"
+readAllBoardIds : (Value -> Cmd msg) -> Cmd msg
+readAllBoardIds cmdPort =
+    LocalStorage.listKeys "B:"
+        |> send cmdPort
 
 
-readAllBoardPlayerIds : LocalStorage msg -> String -> Cmd msg
-readAllBoardPlayerIds storage boardid =
-    listKeys storage ("P:" ++ boardid ++ "/")
+readAllBoardPlayerIds : (Value -> Cmd msg) -> String -> Cmd msg
+readAllBoardPlayerIds cmdPort boardid =
+    LocalStorage.listKeys ("P:" ++ boardid ++ "/")
+        |> send cmdPort
 
 
-readThing : LocalStorage msg -> String -> Cmd msg
-readThing storage key =
-    getItem storage key
+readThing : (Value -> Cmd msg) -> String -> Cmd msg
+readThing cmdPort key =
+    LocalStorage.get key
+        |> send cmdPort
 
 
-writeBoard : Board -> LocalStorage msg -> Cmd msg
-writeBoard board storage =
+writeBoard : Board -> (Value -> Cmd msg) -> Cmd msg
+writeBoard board cmdPort =
     boardEncoder board
-        |> setItem storage (boardKey board)
+        |> Just
+        |> LocalStorage.put (boardKey board)
+        |> send cmdPort
 
 
-writePlayer : Player -> LocalStorage msg -> Cmd msg
-writePlayer player storage =
+writePlayer : Player -> (Value -> Cmd msg) -> Cmd msg
+writePlayer player cmdPort =
     playerEncoder player
-        |> setItem storage (playerKey player)
+        |> Just
+        |> LocalStorage.put (playerKey player)
+        |> send cmdPort
 
 
 type PersistentThingType
@@ -127,10 +153,13 @@ keyType : String -> PersistentThingType
 keyType string =
     if String.startsWith "B:" string then
         PersistentBoardType
+
     else if String.startsWith "P:" string then
         PersistentPlayerType
+
     else if String.startsWith "M:" string then
         PersistentModelType
+
     else
         UnknownType
 

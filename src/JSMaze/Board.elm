@@ -10,26 +10,25 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.Board
-    exposing
-        ( addPlayer
-        , boardToStrings
-        , canMove
-        , fixPlayer
-        , forwardDelta
-        , getCell
-        , makeEmptyBoard
-        , removePlayer
-        , resize
-        , separateBoardSpec
-        , setCell
-        , setId
-        , simpleBoard
-        , simpleBoardSpec
-        , stringsToBoard
-        , stringsToBoardResult
-        , updatePlayer
-        )
+module JSMaze.Board exposing
+    ( addPlayer
+    , boardToStrings
+    , canMove
+    , fixPlayer
+    , forwardDelta
+    , getCell
+    , makeEmptyBoard
+    , removePlayer
+    , resize
+    , separateBoardSpec
+    , setCell
+    , setId
+    , simpleBoard
+    , simpleBoardSpec
+    , stringsToBoard
+    , stringsToBoardResult
+    , updatePlayer
+    )
 
 import Array exposing (Array)
 import Array.Extra as AE
@@ -117,17 +116,16 @@ separateBoardSpec : BoardSpec -> Result String WallSpecs
 separateBoardSpec spec =
     let
         split : BoardSpec -> ( CharListList, CharListList ) -> ( CharListList, CharListList )
-        split =
-            \lines ( nss, ews ) ->
-                case lines of
-                    [] ->
-                        ( List.reverse nss, List.reverse ews )
+        split lines ( nss2, ews2 ) =
+            case lines of
+                [] ->
+                    ( List.reverse nss2, List.reverse ews2 )
 
-                    [ _ ] ->
-                        ( List.reverse nss, List.reverse ews )
+                [ _ ] ->
+                    ( List.reverse nss2, List.reverse ews2 )
 
-                    ns :: ew :: tail ->
-                        split tail ( String.toList ns :: nss, String.toList ew :: ews )
+                ns :: ew :: tail ->
+                    split tail ( String.toList ns :: nss2, String.toList ew :: ews2 )
 
         ( nss, ews ) =
             split spec ( [], [] )
@@ -157,8 +155,9 @@ separateBoardSpec spec =
             , rows = List.length nss
             , cols = maxewl
             }
+
     else
-        Err ("Length mismatch: " ++ toString nsls ++ ", " ++ toString ewls)
+        Err ("Length mismatch: " ++ Debug.toString nsls ++ ", " ++ Debug.toString ewls)
 
 
 makeEmptyCell : Int -> Int -> Int -> Int -> Cell
@@ -212,56 +211,54 @@ wallSetter : WallSetter -> List WallSpec -> Board -> Board
 wallSetter setter wallSpecs board =
     let
         doCols : Int -> WallSpec -> Row -> Maybe Row -> ( Row, Maybe Row )
-        doCols =
-            \colnum specs row rowAbove ->
-                case specs of
-                    [] ->
-                        ( row, rowAbove )
+        doCols colnum specs row rowAbove =
+            case specs of
+                [] ->
+                    ( row, rowAbove )
 
-                    spec :: tail ->
-                        let
-                            ( nr, nra ) =
-                                setter colnum spec row rowAbove
-                        in
-                        doCols (colnum + 1) tail nr nra
+                spec :: tail ->
+                    let
+                        ( nr, nra ) =
+                            setter colnum spec row rowAbove
+                    in
+                    doCols (colnum + 1) tail nr nra
 
         doRows : Int -> List WallSpec -> Array Row -> Array Row
-        doRows =
-            \rownum wallspecs rows ->
-                case wallspecs of
-                    [] ->
-                        rows
+        doRows rownum wallspecs rows =
+            case wallspecs of
+                [] ->
+                    rows
 
-                    specs :: tail ->
-                        case Array.get rownum rows of
-                            Nothing ->
-                                rows
+                specs :: tail ->
+                    case Array.get rownum rows of
+                        Nothing ->
+                            rows
 
-                            Just row ->
-                                let
-                                    rowAbove =
-                                        Array.get (rownum - 1) rows
+                        Just row ->
+                            let
+                                rowAbove =
+                                    Array.get (rownum - 1) rows
 
-                                    ( nr, nra ) =
-                                        doCols 0 specs row rowAbove
+                                ( nr, nra ) =
+                                    doCols 0 specs row rowAbove
 
-                                    nrs =
-                                        Array.set rownum nr rows
+                                nrs =
+                                    Array.set rownum nr rows
 
-                                    newRows =
-                                        case nra of
-                                            Nothing ->
-                                                nrs
+                                newRows =
+                                    case nra of
+                                        Nothing ->
+                                            nrs
 
-                                            Just r ->
-                                                Array.set (rownum - 1) r nrs
-                                in
-                                doRows (rownum + 1) tail newRows
+                                        Just r ->
+                                            Array.set (rownum - 1) r nrs
+                            in
+                            doRows (rownum + 1) tail newRows
 
-        rows =
+        rows2 =
             doRows 0 wallSpecs board.contents
     in
-    { board | contents = rows }
+    { board | contents = rows2 }
 
 
 setNss =
@@ -272,6 +269,7 @@ setNs : Int -> Bool -> Row -> Maybe Row -> ( Row, Maybe Row )
 setNs colnum isNs row rowAbove =
     if not isNs then
         ( row, rowAbove )
+
     else
         ( setDir setN colnum row
         , case rowAbove of
@@ -291,6 +289,7 @@ setEw : Int -> Bool -> Row -> Maybe Row -> ( Row, Maybe Row )
 setEw colnum isEw row rowAbove =
     if not isEw then
         ( row, Nothing )
+
     else
         ( setDir setW colnum row
             |> setDir setE (colnum - 1)
@@ -390,6 +389,7 @@ rowToNorths row =
             \cell ->
                 if cell.walls.north then
                     "-"
+
                 else
                     " "
     in
@@ -406,6 +406,7 @@ rowToWests row =
             \cell ->
                 if cell.walls.west then
                     "|"
+
                 else
                     " "
     in
@@ -549,6 +550,7 @@ resize ( newrows, newcols ) board =
     in
     if r == or && c == oc then
         board
+
     else
         let
             doCell : Int -> Int -> Board -> Board
@@ -568,15 +570,19 @@ resize ( newrows, newcols ) board =
                                     | south =
                                         if rowidx == maxr then
                                             True
+
                                         else if rowidx >= maxor then
                                             False
+
                                         else
                                             walls.south
                                     , east =
                                         if colidx == maxc then
                                             True
+
                                         else if colidx >= maxoc then
                                             False
+
                                         else
                                             walls.east
                                 }
@@ -645,6 +651,7 @@ canMove location ( dr, dc ) board =
     in
     if nr < 0 || nr >= board.rows || nc < 0 || nc >= board.cols then
         False
+
     else
         case getCell location board of
             Nothing ->
@@ -658,16 +665,20 @@ canMove location ( dr, dc ) board =
                     drok =
                         if dr == 0 then
                             True
+
                         else if dr > 0 then
                             not walls.south
+
                         else
                             not walls.north
 
                     dcok =
                         if dc == 0 then
                             True
+
                         else if dc > 0 then
                             not walls.east
+
                         else
                             not walls.west
                 in
@@ -678,17 +689,17 @@ type alias WallGetter =
     Walls -> Bool
 
 
-forwardDelta : Direction -> ( Location, Direction, Direction, WallGetter, WallGetter, WallGetter )
+forwardDelta : Direction -> ( ( Location, Direction, Direction ), ( WallGetter, WallGetter, WallGetter ) )
 forwardDelta dir =
     case dir of
         North ->
-            ( ( -1, 0 ), West, East, .west, .east, .north )
+            ( ( ( -1, 0 ), West, East ), ( .west, .east, .north ) )
 
         South ->
-            ( ( 1, 0 ), East, West, .east, .west, .south )
+            ( ( ( 1, 0 ), East, West ), ( .east, .west, .south ) )
 
         East ->
-            ( ( 0, 1 ), North, South, .north, .south, .east )
+            ( ( ( 0, 1 ), North, South ), ( .north, .south, .east ) )
 
         West ->
-            ( ( 0, -1 ), South, North, .south, .north, .west )
+            ( ( ( 0, -1 ), South, North ), ( .south, .north, .west ) )

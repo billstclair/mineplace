@@ -10,12 +10,11 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.Interface
-    exposing
-        ( GameState(..)
-        , ServerState
-        , messageProcessor
-        )
+module JSMaze.Interface exposing
+    ( GameState(..)
+    , ServerState
+    , messageProcessor
+    )
 
 import Dict exposing (Dict)
 import JSMaze.Board exposing (simpleBoard)

@@ -10,7 +10,7 @@
 ----------------------------------------------------------------------
 
 
-port module PortMaze exposing (..)
+port module PortMaze exposing (clear, getItem, listKeys, main, ports, receiveItem, setItem, subscriptions)
 
 import Html
 import JSMaze exposing (init, update, view)

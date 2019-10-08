@@ -10,31 +10,27 @@
 ----------------------------------------------------------------------
 
 
-module JSMaze.TwoDMath
-    exposing
-        ( Rectangle
-        , Vector
-        , combineVectors
-        , distanceToRectangle
-        , isVectorInRectangle
-        , makeRectangle
-        , makeSize
-        , makeVector
-        , positionToVector
-        , rectangleCenter
-        , rectangleCoordinates
-        , rectangleFromVectors
-        , sizeToVector
-        , vectorCoordinates
-        , vectorDifference
-        , vectorDistance
-        , vectorSum
-        , zeroRectangle
-        , zeroVector
-        )
+module JSMaze.TwoDMath exposing
+    ( Rectangle
+    , Vector
+    , combineVectors
+    , distanceToRectangle
+    , isVectorInRectangle
+    , makeRectangle
+    , makeSize
+    , makeVector
+    , rectangleCenter
+    , rectangleCoordinates
+    , rectangleFromVectors
+    , vectorCoordinates
+    , vectorDifference
+    , vectorDistance
+    , vectorSum
+    , zeroRectangle
+    , zeroVector
+    )
 
-import Mouse exposing (Position)
-import Window exposing (Size)
+import JSMaze.Types exposing (Size)
 
 
 type alias Vector =
@@ -51,16 +47,6 @@ makeVector x y =
 vectorCoordinates : Vector -> ( Float, Float )
 vectorCoordinates vector =
     ( vector.x, vector.y )
-
-
-sizeToVector : Size -> Vector
-sizeToVector size =
-    makeVector (toFloat size.width) (toFloat size.height)
-
-
-positionToVector : Position -> Vector
-positionToVector pos =
-    makeVector (toFloat pos.x) (toFloat pos.y)
 
 
 zeroVector : Vector
@@ -98,7 +84,7 @@ type alias Rectangle =
 
 {-| Result is (left, top, right bottom)
 -}
-rectangleCoordinates : Rectangle -> ( Float, Float, Float, Float )
+rectangleCoordinates : Rectangle -> ( ( Float, Float ), ( Float, Float ) )
 rectangleCoordinates rect =
     let
         pos =
@@ -119,7 +105,7 @@ rectangleCoordinates rect =
         bottom =
             top + size.y
     in
-    ( left, top, right, bottom )
+    ( ( left, top ), ( right, bottom ) )
 
 
 makeRectangle : Float -> Float -> Float -> Float -> Rectangle
@@ -144,7 +130,7 @@ zeroRectangle =
 rectangleCenter : Rectangle -> Vector
 rectangleCenter rect =
     let
-        ( left, top, right, bottom ) =
+        ( ( left, top ), ( right, bottom ) ) =
             rectangleCoordinates rect
     in
     makeVector ((left + right) / 2) ((top + bottom) / 2)
@@ -162,7 +148,7 @@ distanceToRectangle vect rect =
 isVectorInRectangle : Vector -> Rectangle -> Bool
 isVectorInRectangle vect rect =
     let
-        ( left, top, right, bottom ) =
+        ( ( left, top ), ( right, bottom ) ) =
             rectangleCoordinates rect
 
         ( x, y ) =
@@ -173,4 +159,4 @@ isVectorInRectangle vect rect =
 
 makeSize : Int -> Int -> Size
 makeSize w h =
-    { width = w, height = h }
+    { width = toFloat w, height = toFloat h }

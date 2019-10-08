@@ -2,7 +2,7 @@
 
 This file documents the persistence mechanism used by JSMaze.
 
-Persistence is all done via [billstclair/elm-localstorage](http://package.elm-lang.org/packages/billstclair/elm-localstorage/latest). On the server, this also requires the [node-localstorage](https://www.npmjs.com/package/node-localstorage) NPM package.
+Persistence is all done via [billstclair/elm-localstorage](http://package.elm-lang.org/packages/billstclair/elm-localstorage/latest).
 
 `JSMaze.EncodeDecode` contains all the functions that convert between `Value` and different data structures.
 

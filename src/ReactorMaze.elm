@@ -10,7 +10,7 @@
 ----------------------------------------------------------------------
 
 
-module ReactorMaze exposing (..)
+module ReactorMaze exposing (main)
 
 import Html
 import JSMaze exposing (init, prefix, update, view)
