@@ -936,7 +936,7 @@ renderContent model =
 
 view : Model -> Document Msg
 view model =
-    { title = "MineSpace"
+    { title = "MinePlace"
     , body =
         if model.layout == NoLayout then
             [ div [] [] ]
@@ -945,7 +945,7 @@ view model =
             [ div [ align "center" ]
                 [ Styles.style
                 , h2 []
-                    [ text "MineSpace" ]
+                    [ text "MinePlace" ]
                 , renderContent model
                 , p []
                     [ text "Use IJKL or WASD to move/rotate."
