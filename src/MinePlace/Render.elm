@@ -37,7 +37,6 @@ import MinePlace.Types
         , Row
         , WallSpec
         , Walls
-        , WhichButton(..)
         , sumLocations
         )
 import Svg exposing (Svg, g, image, line, rect, svg)
@@ -65,8 +64,6 @@ import Svg.Button as Button
         , Content(..)
         , checkSubscription
         , getState
-        , normalRepeatTime
-        , repeatingButton
         , setSize
         )
 
@@ -135,22 +132,22 @@ render2d forEditing isTouchAware w withToggleButton player board =
                 [ Button.render
                     ( outerw - 2, 0 )
                     (TextContent "+")
-                    (ButtonMsg OtherButton)
+                    (ButtonMsg <| AddColumn 1)
                     (simpleButton addcolSize (AddColumn 1) isTouchAware)
                 , Button.render
                     ( outerw - 2, addcolw - 2 )
                     (TextContent "-")
-                    (ButtonMsg OtherButton)
+                    (ButtonMsg <| AddColumn -1)
                     (simpleButton addcolSize (AddColumn -1) isTouchAware)
                 , Button.render
                     ( 0, outerh - 2 )
                     (TextContent "+")
-                    (ButtonMsg OtherButton)
+                    (ButtonMsg <| AddRow 1)
                     (simpleButton addcolSize (AddRow 1) isTouchAware)
                 , Button.render
                     ( addcolw - 2, outerh - 2 )
                     (TextContent "-")
-                    (ButtonMsg OtherButton)
+                    (ButtonMsg <| AddRow -1)
                     (simpleButton addcolSize (AddRow -1) isTouchAware)
                 ]
         , render2dPlayer delta player
@@ -370,7 +367,7 @@ renderOverlayButton operation isTouchAware width height =
         button =
             simpleButton ( width, height ) operation isTouchAware
     in
-    Button.renderOverlay (ButtonMsg OtherButton) button
+    Button.renderOverlay (ButtonMsg operation) button
 
 
 vanishingDistance : Int
@@ -721,11 +718,6 @@ simpleButton size operation isTouchAware =
     Button.setTouchAware isTouchAware button
 
 
-repeatingButton : Button.Size -> Operation -> Button Operation
-repeatingButton size operation =
-    Button.repeatingButton normalRepeatTime size operation
-
-
 renderControls : Float -> Bool -> Layout -> Button Operation -> Button Operation -> Html Msg
 renderControls w isTouchAware layout forwardButton reverseButton =
     let
@@ -756,22 +748,22 @@ renderControls w isTouchAware layout forwardButton reverseButton =
         [ Button.render
             ( 2, leftRightY )
             (TextContent "<")
-            (ButtonMsg OtherButton)
+            (ButtonMsg TurnLeft)
             (simpleButton size TurnLeft isTouchAware)
         , Button.render
             ( 2 * bw - 2, leftRightY )
             (TextContent ">")
-            (ButtonMsg OtherButton)
+            (ButtonMsg TurnRight)
             (simpleButton size TurnRight isTouchAware)
         , Button.render
             ( bw, 2 )
             (TextContent "^")
-            (ButtonMsg GoForwardButton)
+            (ButtonMsg GoForward)
             (setSize size forwardButton)
         , Button.render
             ( bw, bw )
             (TextContent "v")
-            (ButtonMsg GoBackButton)
+            (ButtonMsg GoBack)
             (setSize size reverseButton)
         , case layout of
             TopViewLayout ->
@@ -779,12 +771,12 @@ renderControls w isTouchAware layout forwardButton reverseButton =
                     [ Button.render
                         ( 2, bw )
                         (TextContent "Edit")
-                        (ButtonMsg OtherButton)
+                        (ButtonMsg EditMaze)
                         (simpleButton size EditMaze isTouchAware)
                     , Button.render
                         ( 2 * bw - 2, bw )
                         (TextContent "Get")
-                        (ButtonMsg OtherButton)
+                        (ButtonMsg GetMaze)
                         (simpleButton size GetMaze isTouchAware)
                     ]
 
@@ -793,12 +785,12 @@ renderControls w isTouchAware layout forwardButton reverseButton =
                     [ Button.render
                         ( 2, bw )
                         (TextContent "Save")
-                        (ButtonMsg OtherButton)
+                        (ButtonMsg SaveMaze)
                         (simpleButton size SaveMaze isTouchAware)
                     , Button.render
                         ( 2 * bw - 2, bw )
                         (TextContent "Init")
-                        (ButtonMsg OtherButton)
+                        (ButtonMsg GetMaze)
                         (simpleButton size GetMaze isTouchAware)
                     ]
 

@@ -104,7 +104,6 @@ import MinePlace.Types
         , Player
         , Size
         , Started(..)
-        , WhichButton(..)
         , Write(..)
         , currentBoardId
         , currentPlayerId
@@ -113,7 +112,7 @@ import MinePlace.Types
         )
 import PortFunnel.LocalStorage as LocalStorage
 import PortFunnel.WebSocket as WebSocket
-import Svg.Button as Button exposing (Button, normalRepeatTime)
+import Svg.Button as Button exposing (Button, RepeatTime(..))
 import Task
 import Time exposing (Posix)
 import Url exposing (Url)
@@ -140,6 +139,16 @@ initialButtonSize =
     ( 100, 100 )
 
 
+delay : Float
+delay =
+    50
+
+
+normalRepeatTime : RepeatTime
+normalRepeatTime =
+    RepeatTimeWithInitialDelay (10 * delay) (2 * delay)
+
+
 initialRepeatingButton : Operation -> Button Operation
 initialRepeatingButton operation =
     Button.repeatingButton normalRepeatTime initialButtonSize operation
@@ -156,6 +165,7 @@ initialModel =
     , player = initialPlayer
     , layout = NormalLayout
     , isTouchAware = False
+    , delayLeft = 0
     , forwardButton = initialRepeatingButton GoForward
     , backButton = initialRepeatingButton GoBack
     , subscription = Nothing
@@ -522,12 +532,15 @@ updateButton button model =
 
 dummyButton : Button Operation
 dummyButton =
-    Button.simpleButton ( 0, 0 ) (AddColumn 1)
+    Button.simpleButton ( 0, 0 ) TurnRight
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Noop ->
+            model |> withNoCmd
+
         ReceiveTask result ->
             -- TODO
             model |> withNoCmd
@@ -544,18 +557,27 @@ update msg model =
                             , chainWrites rest
                             ]
 
-        ButtonMsg whichButton m ->
+        RepeatButtonMsg time operation m ->
+            if time >= model.delayLeft then
+                update (ButtonMsg operation m)
+                    { model | delayLeft = 0 }
+
+            else
+                { model | delayLeft = model.delayLeft - time }
+                    |> withNoCmd
+
+        ButtonMsg operation m ->
             let
                 msgButton =
-                    case whichButton of
-                        OtherButton ->
-                            dummyButton
-
-                        GoForwardButton ->
+                    case operation of
+                        GoForward ->
                             model.forwardButton
 
-                        GoBackButton ->
+                        GoBack ->
                             model.backButton
+
+                        _ ->
+                            Button.simpleButton ( 0, 0 ) operation
             in
             case Button.checkSubscription m msgButton of
                 Just ( time, m2 ) ->
@@ -565,19 +587,22 @@ update msg model =
                                 Nothing
 
                             else
-                                Just ( time, whichButton, m2 )
+                                Just ( time, operation, m2 )
+                        , delayLeft =
+                            if time <= 0 then
+                                0
+
+                            else
+                                time
                     }
                         |> withNoCmd
 
                 Nothing ->
                     let
                         ( isClick, button, cmd ) =
-                            Button.update (\bm -> ButtonMsg whichButton bm)
+                            Button.update (\bm -> ButtonMsg operation bm)
                                 m
                                 msgButton
-
-                        operation =
-                            Button.getState button
 
                         dir =
                             operationToDirection operation
@@ -950,10 +975,13 @@ subscriptions model =
     Sub.batch
         [ Events.onResize (\w h -> Resize <| Size (toFloat w) (toFloat h))
         , Events.onKeyDown keyDecoder
-        , case model.subscription of
-            Nothing ->
-                Sub.none
+        , Time.every delay
+            (\_ ->
+                case model.subscription of
+                    Nothing ->
+                        Noop
 
-            Just ( time, whichButton, msg ) ->
-                Time.every time (\_ -> ButtonMsg whichButton msg)
+                    Just ( time, operation, msg ) ->
+                        RepeatButtonMsg delay operation msg
+            )
         ]

@@ -45,7 +45,6 @@ module MinePlace.Types exposing
     , Url
     , WallSpec
     , Walls
-    , WhichButton(..)
     , Write(..)
     , currentBoardId
     , currentPlayerId
@@ -85,9 +84,10 @@ type alias Model =
     , player : Player
     , layout : Layout
     , isTouchAware : Bool
+    , delayLeft : Float
     , forwardButton : Button Operation
     , backButton : Button Operation
-    , subscription : Maybe ( Float, WhichButton, Button.Msg )
+    , subscription : Maybe ( Float, Operation, Button.Msg )
     , started : Started
     , funnelState : State Msg
     }
@@ -111,12 +111,6 @@ type Layout
     | NoLayout
 
 
-type WhichButton
-    = GoForwardButton
-    | GoBackButton
-    | OtherButton
-
-
 type Operation
     = TurnRight
     | TurnLeft
@@ -138,10 +132,12 @@ type Write
 
 
 type Msg
-    = InitialSize Size
+    = Noop
+    | InitialSize Size
     | Resize Size
     | DownKey String
-    | ButtonMsg WhichButton Button.Msg
+    | RepeatButtonMsg Float Operation Button.Msg
+    | ButtonMsg Operation Button.Msg
     | DoWrites (List Write)
     | ReceiveTask (Result String Message)
     | Nop
