@@ -10,15 +10,13 @@
 ----------------------------------------------------------------------
 
 
-port module PortFunnels exposing
+module PortFunnels exposing
     ( FunnelDict
     , Handler(..)
     , State
-    , getCmdPort
     , initialState
     , makeFunnelDict
     , processValue
-    , subscriptions
     )
 
 {-| This module is the basis for a `PortFunnels` module of your own.
@@ -151,51 +149,6 @@ appTrampoline portGetter genericMessage funnel state model =
                 appFunnel
                 state
                 model
-
-
-{-| Here are the two ports used to communicate with all the backend JavaScript.
-
-You can name them something besides `cmdPort` and `subPort`,
-but then you have to change the call to `PortFunnel.subscribe()`
-in `site/index.html`.
-
-If you run the application in `elm reactor`, these will go nowhere.
-
--}
-port cmdPort : Value -> Cmd msg
-
-
-port subPort : (Value -> msg) -> Sub msg
-
-
-{-| Create a subscription for the `subPort`, given a Msg wrapper.
--}
-subscriptions : (Value -> msg) -> model -> Sub msg
-subscriptions process model =
-    subPort process
-
-
-{-| Turn the `moduleName` inside a `GenericMessage` into the output port.
-
-    getCmdPort tagger moduleName useSimulator
-
-`tagger` is the same `Msg` that processes input from the subscription port.
-
-`moduleName` will be ignored if `useSimulator` is `False`.
-
--}
-getCmdPort : (Value -> msg) -> String -> Bool -> (Value -> Cmd msg)
-getCmdPort tagger moduleName useSimulator =
-    if not useSimulator then
-        cmdPort
-
-    else
-        case Dict.get moduleName simulatedPortDict of
-            Just makeSimulatedCmdPort ->
-                makeSimulatedCmdPort tagger
-
-            Nothing ->
-                cmdPort
 
 
 {-| A `Dict` that maps a module name to a concretized `FunnelSpec`.

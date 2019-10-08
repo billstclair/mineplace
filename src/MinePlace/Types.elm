@@ -59,6 +59,7 @@ module MinePlace.Types exposing
 import Array exposing (Array)
 import Browser exposing (Document, UrlRequest)
 import Dict exposing (Dict)
+import Json.Encode as JE exposing (Value)
 import Mastodon.PortFunnels as PortFunnels exposing (FunnelDict, Handler(..), State)
 import Svg.Button as Button exposing (Button)
 import Task exposing (Task)
@@ -79,7 +80,8 @@ type Started
 
 
 type alias Model =
-    { windowSize : Size
+    { msg : Maybe String
+    , windowSize : Size
     , board : Board
     , player : Player
     , layout : Layout
@@ -132,15 +134,15 @@ type Write
 
 
 type Msg
-    = Noop
-    | InitialSize Size
+    = InitialSize Size
     | Resize Size
     | DownKey String
     | RepeatButtonMsg Float Operation Button.Msg
     | ButtonMsg Operation Button.Msg
     | DoWrites (List Write)
     | ReceiveTask (Result String Message)
-    | Nop
+    | Process Value
+    | Noop
     | OnUrlRequest UrlRequest
     | OnUrlChange Url.Url
 

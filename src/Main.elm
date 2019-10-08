@@ -160,10 +160,11 @@ initialModel =
         board =
             addPlayer initialPlayer simpleBoard
     in
-    { windowSize = initialSize
+    { msg = Nothing
+    , windowSize = initialSize
     , board = { board | id = currentBoardId }
     , player = initialPlayer
-    , layout = NormalLayout
+    , layout = NoLayout
     , isTouchAware = False
     , delayLeft = 0
     , forwardButton = initialRepeatingButton GoForward
@@ -668,13 +669,24 @@ update msg model =
             in
             mdl |> withCmd (writePlayer mdl.player cmdPort)
 
+        Process value ->
+            case
+                PortFunnels.processValue funnelDict
+                    value
+                    model.funnelState
+                    model
+            of
+                Err error ->
+                    { model | msg = Just <| Debug.toString error }
+                        |> withNoCmd
+
+                Ok res ->
+                    res
+
         OnUrlRequest _ ->
             model |> withNoCmd
 
         OnUrlChange _ ->
-            model |> withNoCmd
-
-        Nop ->
             model |> withNoCmd
 
 
@@ -975,6 +987,7 @@ subscriptions model =
     Sub.batch
         [ Events.onResize (\w h -> Resize <| Size (toFloat w) (toFloat h))
         , Events.onKeyDown keyDecoder
+        , subPort Process
         , Time.every delay
             (\_ ->
                 case model.subscription of

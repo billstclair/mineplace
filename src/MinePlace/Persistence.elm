@@ -54,7 +54,7 @@ import PortFunnel.LocalStorage as LocalStorage exposing (Key, Message, Value)
 -}
 prefix : String
 prefix =
-    "jsmaze"
+    "minespace"
 
 
 {-| We don't do simulated storage, so this doesn't need to be in the model.
