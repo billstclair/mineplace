@@ -11,7 +11,7 @@
             "billstclair/elm-localstorage": "7.2.0",
             "billstclair/elm-mastodon-websocket": "1.0.0",
             "billstclair/elm-port-funnel": "1.2.0",
-            "billstclair/elm-svg-button": "3.0.0",
+            "billstclair/elm-svg-button": "3.1.0",
             "billstclair/elm-websocket-client": "4.1.0",
             "billstclair/elm-websocket-framework": "13.0.2",
             "elm/browser": "1.0.1",

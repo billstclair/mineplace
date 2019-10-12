@@ -30,11 +30,12 @@ import Json.Decode as JD exposing (Decoder)
 import Json.Decode.Pipeline exposing (hardcoded, optional, required)
 import Json.Encode as JE exposing (Value)
 import MinePlace.Board exposing (boardToStrings, setId, stringsToBoard)
-import MinePlace.Types
+import MinePlace.Types as Types
     exposing
         ( Appearance(..)
         , Board
         , BoardSpec
+        , Colors
         , Direction(..)
         , ErrorKind(..)
         , FullPlayer
@@ -57,8 +58,6 @@ import MinePlace.Types
         , SideImages
         , StaticImages
         , Url
-        , directionToString
-        , stringToDirection
         )
 import WebSocketFramework exposing (decodePlist, unknownMessage)
 import WebSocketFramework.EncodeDecode exposing (genericMessageDecoder)
@@ -123,17 +122,52 @@ layoutDecoder =
     JD.map stringToLayout JD.string
 
 
+colorsEncoder : Colors -> Value
+colorsEncoder colors =
+    JE.object
+        [ ( "errorBackground", JE.string colors.errorBackground )
+        , ( "errorColor", JE.string colors.errorColor )
+        , ( "borderStroke", JE.string colors.borderStroke )
+        , ( "borderFill", JE.string colors.borderFill )
+        , ( "playerStroke", JE.string colors.playerStroke )
+        , ( "playerFill", JE.string colors.playerFill )
+        , ( "editorHighlightStroke", JE.string colors.editorHighlightStroke )
+        , ( "editorHighlightFill", JE.string colors.editorHighlightFill )
+        , ( "lineStroke", JE.string colors.lineStroke )
+        ]
+
+
+colorsDecoder : Decoder Colors
+colorsDecoder =
+    JD.succeed Colors
+        |> required "errorBackground" JD.string
+        |> required "errorColor" JD.string
+        |> required "borderStroke" JD.string
+        |> required "borderFill" JD.string
+        |> required "playerStroke" JD.string
+        |> required "playerFill" JD.string
+        |> required "editorHighlightStroke" JD.string
+        |> required "editorHighlightFill" JD.string
+        |> required "lineStroke" JD.string
+
+
 modelEncoder : Model -> Value
 modelEncoder model =
     JE.object
         [ ( "layout", layoutEncoder model.layout )
+        , ( "colors", colorsEncoder model.colors )
         ]
 
 
 modelDecoder : Decoder SavedModel
 modelDecoder =
-    JD.map SavedModel
+    JD.map2 SavedModel
         (JD.field "layout" layoutDecoder)
+        (JD.oneOf
+            [ JD.field "colors" colorsDecoder
+            , JD.succeed Types.lightColors
+            ]
+        )
 
 
 decodeValue : Decoder a -> Value -> Result String a
@@ -206,7 +240,7 @@ locationDecoder =
 
 directionEncoder : Direction -> Value
 directionEncoder direction =
-    JE.string <| directionToString direction
+    JE.string <| Types.directionToString direction
 
 
 directionDecoder : Decoder Direction
@@ -214,7 +248,7 @@ directionDecoder =
     JD.string
         |> JD.andThen
             (\s ->
-                case stringToDirection s of
+                case Types.stringToDirection s of
                     Just dir ->
                         JD.succeed dir
 

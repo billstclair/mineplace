@@ -15,6 +15,7 @@ module MinePlace.Types exposing
     , Board
     , BoardSpec
     , Cell
+    , Colors
     , Direction(..)
     , ErrorKind(..)
     , FullPlayer
@@ -48,9 +49,11 @@ module MinePlace.Types exposing
     , Write(..)
     , currentBoardId
     , currentPlayerId
+    , darkColors
     , defaultSavedModel
     , directionToString
     , initialPlayer
+    , lightColors
     , operationToDirection
     , stringToDirection
     , sumLocations
@@ -79,6 +82,57 @@ type Started
     | Started
 
 
+type alias Colors =
+    { errorBackground : String
+    , errorColor : String
+    , borderStroke : String
+    , borderFill : String
+    , playerStroke : String
+    , playerFill : String
+    , editorHighlightStroke : String
+    , editorHighlightFill : String
+    , lineStroke : String
+    }
+
+
+nearWhite : String
+nearWhite =
+    "#ececec"
+
+
+nearBlack : String
+nearBlack =
+    "#141414"
+
+
+lightColors : Colors
+lightColors =
+    { errorBackground = "red"
+    , errorColor = "white"
+    , borderStroke = "black"
+    , borderFill = "white"
+    , playerStroke = "black"
+    , playerFill = "lightgray"
+    , editorHighlightStroke = "lightblue"
+    , editorHighlightFill = "lightblue"
+    , lineStroke = "black"
+    }
+
+
+darkColors : Colors
+darkColors =
+    { errorBackground = nearBlack
+    , errorColor = "red"
+    , borderStroke = nearWhite
+    , borderFill = nearBlack
+    , playerStroke = "white"
+    , playerFill = "darkgray"
+    , editorHighlightStroke = "lightblue"
+    , editorHighlightFill = "lightblue"
+    , lineStroke = nearWhite
+    }
+
+
 type alias Model =
     { msg : Maybe String
     , windowSize : Size
@@ -89,6 +143,7 @@ type alias Model =
     , delayLeft : Float
     , forwardButton : Button Operation
     , backButton : Button Operation
+    , colors : Colors
     , subscription : Maybe ( Float, Operation, Button.Msg )
     , started : Started
     , funnelState : State Msg
@@ -97,12 +152,14 @@ type alias Model =
 
 type alias SavedModel =
     { layout : Layout
+    , colors : Colors
     }
 
 
 defaultSavedModel : SavedModel
 defaultSavedModel =
     { layout = NormalLayout
+    , colors = lightColors
     }
 
 

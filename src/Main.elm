@@ -92,7 +92,7 @@ import MinePlace.Persistence as Persistence
         )
 import MinePlace.Render exposing (render2d, render3d, renderControls)
 import MinePlace.Styles as Styles
-import MinePlace.Types
+import MinePlace.Types as Types
     exposing
         ( Board
         , Direction(..)
@@ -169,6 +169,7 @@ initialModel =
     , delayLeft = 0
     , forwardButton = initialRepeatingButton GoForward
     , backButton = initialRepeatingButton GoBack
+    , colors = Types.lightColors
     , subscription = Nothing
     , started = NotStarted
     , funnelState =
@@ -281,7 +282,10 @@ storageHandler response state model =
                                             (Persistence.readThing cmdPort modelKey)
 
                                 PersistentModel savedModel ->
-                                    { mdl | layout = savedModel.layout }
+                                    { mdl
+                                        | layout = savedModel.layout
+                                        , colors = savedModel.colors
+                                    }
                                         |> withNoCmd
 
         _ ->
@@ -955,7 +959,7 @@ view model =
 
         else
             [ div [ align "center" ]
-                [ Styles.style
+                [ Styles.style model.colors
                 , h2 []
                     [ text "MinePlace" ]
                 , renderContent model
