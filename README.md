@@ -1,6 +1,6 @@
 # [MinePlace.social](https://mineplace.social/)
 
-“In that famous mining game, you build a mine. In Mineplace, you live in a mansion.”
+“In that famous mining game, you build a mine. In MinePlace, you live in a mansion.”
 
 It’s pronounced "mine-PLACE", with the first word being a pun on the personal possessive pronoun and a tunnel where valuable commodities are dug from the ground, and the whole being a curtsy in the direction of the fabulously successful networked Java game. You may also think of it in German as "Mein Platz" or French "Ma Place".
 

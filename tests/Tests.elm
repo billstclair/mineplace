@@ -2,14 +2,15 @@ module Tests exposing (all)
 
 import Dict exposing (Dict)
 import Expect exposing (Expectation)
-import JSMaze.Board as Board
+import Json.Decode as JD
+import MinePlace.Board as Board
     exposing
         ( boardToStrings
         , simpleBoard
         , simpleBoardSpec
         , stringsToBoard
         )
-import JSMaze.EncodeDecode as ED
+import MinePlace.EncodeDecode as ED
     exposing
         ( boardEncoder
         , decodeBoard
@@ -18,7 +19,7 @@ import JSMaze.EncodeDecode as ED
         , stringToValue
         , valueToString
         )
-import JSMaze.Types
+import MinePlace.Types
     exposing
         ( Appearance(..)
         , Board
@@ -42,7 +43,6 @@ import JSMaze.Types
         , StaticImages
         , Url
         )
-import Json.Decode as JD
 import Test exposing (..)
 import WebSocketFramework.EncodeDecode
     exposing
@@ -71,7 +71,7 @@ testMap : (x -> String -> Test) -> List x -> List Test
 testMap test data =
     let
         numbers =
-            List.map toString <| List.range 1 (List.length data)
+            List.map Debug.toString <| List.range 1 (List.length data)
     in
     List.map2 test data numbers
 
@@ -91,6 +91,7 @@ maybeLog : String -> a -> a
 maybeLog label value =
     if enableLogging then
         log label value
+
     else
         value
 
@@ -104,7 +105,7 @@ expectResult sb was =
                     Expect.true "You shouldn't ever see this." True
 
                 Ok _ ->
-                    Expect.false (toString err) True
+                    Expect.false (Debug.toString err) True
 
         Ok wasv ->
             case sb of

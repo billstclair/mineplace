@@ -144,6 +144,7 @@ type alias Model =
     , windowSize : Size
     , board : Board
     , player : Player
+    , wallsDict : Dict Location PaintedWalls
     , layout : Layout
     , isTouchAware : Bool
     , delayLeft : Float

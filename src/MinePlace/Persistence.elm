@@ -19,27 +19,24 @@ module MinePlace.Persistence exposing
     , prefix
     , readAllBoardIds
     , readAllBoardPlayerIds
+    , readAllWallsKeys
     , readThing
     , writeBoard
     , writeModel
     , writePlayer
     )
 
+import Json.Encode as JE exposing (Value)
 import MinePlace.Board exposing (simpleBoard)
-import MinePlace.EncodeDecode
-    exposing
-        ( boardEncoder
-        , decodeBoard
-        , decodeModel
-        , decodePlayer
-        , modelEncoder
-        , playerEncoder
-        )
+import MinePlace.EncodeDecode as ED
 import MinePlace.Types
     exposing
         ( Board
+        , Location
         , Model
         , Msg(..)
+        , PaintedWall
+        , PaintedWalls
         , Player
         , SavedModel
         , currentBoardId
@@ -76,7 +73,7 @@ send cmdPort message =
 
 writeModel : Model -> (Value -> Cmd msg) -> Cmd msg
 writeModel model cmdPort =
-    modelEncoder model
+    ED.modelEncoder model
         |> Just
         |> LocalStorage.put modelKey
         |> send cmdPort
@@ -102,6 +99,11 @@ boardIdKey id =
     "B:" ++ id
 
 
+wallsKey : Location -> String
+wallsKey location =
+    "W:" ++ (ED.locationEncoder location |> JE.encode 0)
+
+
 readAllBoardIds : (Value -> Cmd msg) -> Cmd msg
 readAllBoardIds cmdPort =
     LocalStorage.listKeys "B:"
@@ -114,6 +116,12 @@ readAllBoardPlayerIds cmdPort boardid =
         |> send cmdPort
 
 
+readAllWallsKeys : (Value -> Cmd msg) -> Cmd msg
+readAllWallsKeys cmdPort =
+    LocalStorage.listKeys "W:"
+        |> send cmdPort
+
+
 readThing : (Value -> Cmd msg) -> String -> Cmd msg
 readThing cmdPort key =
     LocalStorage.get key
@@ -122,7 +130,7 @@ readThing cmdPort key =
 
 writeBoard : Board -> (Value -> Cmd msg) -> Cmd msg
 writeBoard board cmdPort =
-    boardEncoder board
+    ED.boardEncoder board
         |> Just
         |> LocalStorage.put (boardKey board)
         |> send cmdPort
@@ -130,7 +138,7 @@ writeBoard board cmdPort =
 
 writePlayer : Player -> (Value -> Cmd msg) -> Cmd msg
 writePlayer player cmdPort =
-    playerEncoder player
+    ED.playerEncoder player
         |> Just
         |> LocalStorage.put (playerKey player)
         |> send cmdPort
@@ -140,6 +148,7 @@ type PersistentThingType
     = PersistentBoardType
     | PersistentPlayerType
     | PersistentModelType
+    | PersistentWallsType
     | UnknownType
 
 
@@ -147,6 +156,7 @@ type PersistentThing
     = PersistentBoard Board
     | PersistentPlayer Player
     | PersistentModel SavedModel
+    | PersistentWalls PaintedWalls
 
 
 keyType : String -> PersistentThingType
@@ -160,6 +170,9 @@ keyType string =
     else if String.startsWith "M:" string then
         PersistentModelType
 
+    else if String.startsWith "W:" string then
+        PersistentWallsType
+
     else
         UnknownType
 
@@ -168,7 +181,7 @@ decodePersistentThing : Key -> Value -> Result String PersistentThing
 decodePersistentThing key value =
     case keyType key of
         PersistentBoardType ->
-            case decodeBoard value of
+            case ED.decodeBoard value of
                 Ok board ->
                     Ok <| PersistentBoard board
 
@@ -176,7 +189,7 @@ decodePersistentThing key value =
                     Ok <| PersistentBoard simpleBoard
 
         PersistentPlayerType ->
-            case decodePlayer value of
+            case ED.decodePlayer value of
                 Ok player ->
                     Ok <| PersistentPlayer player
 
@@ -184,12 +197,20 @@ decodePersistentThing key value =
                     Ok <| PersistentPlayer initialPlayer
 
         PersistentModelType ->
-            case decodeModel value of
+            case ED.decodeModel value of
                 Ok model ->
                     Ok <| PersistentModel model
 
                 Err msg ->
                     Ok <| PersistentModel defaultSavedModel
+
+        PersistentWallsType ->
+            case ED.decodePaintedWalls value of
+                Ok walls ->
+                    Ok <| PersistentWalls walls
+
+                Err msg ->
+                    Ok <| PersistentWalls []
 
         _ ->
             Err <| "Unknown key type for \"" ++ key ++ "\""

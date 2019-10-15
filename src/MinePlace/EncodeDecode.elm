@@ -16,10 +16,15 @@ module MinePlace.EncodeDecode exposing
     , decodeBoard
     , decodeBoardSpec
     , decodeModel
+    , decodePaintedWalls
     , decodePlayer
+    , locationDecoder
+    , locationEncoder
     , messageDecoder
     , messageEncoder
     , modelEncoder
+    , paintedWallsDecoder
+    , paintedWallsEncoder
     , playerEncoder
     , stringToValue
     , valueToString
@@ -51,6 +56,7 @@ import MinePlace.Types as Types
         , OwnedPlace
         , OwnedPlacement
         , PaintedWall
+        , PaintedWalls
         , Player
         , PlayerName
         , Point
@@ -1034,3 +1040,18 @@ moveRspDecoder =
         |> required "player" gamePlayerDecoder
         |> required "location" locationDecoder
         |> required "direction" directionDecoder
+
+
+paintedWallsEncoder : PaintedWalls -> Value
+paintedWallsEncoder walls =
+    JE.list paintedWallEncoder walls
+
+
+paintedWallsDecoder : Decoder PaintedWalls
+paintedWallsDecoder =
+    JD.list paintedWallDecoder
+
+
+decodePaintedWalls : Value -> Result String PaintedWalls
+decodePaintedWalls value =
+    decodeValue paintedWallsDecoder value

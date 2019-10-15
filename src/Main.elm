@@ -19,6 +19,7 @@ import Browser.Navigation as Navigation exposing (Key)
 import Char
 import Cmd.Extra exposing (withCmd, withCmds, withNoCmd)
 import Debug exposing (log)
+import Dict exposing (Dict)
 import Html
     exposing
         ( Attribute
@@ -165,6 +166,7 @@ initialModel =
     , windowSize = initialSize
     , board = { board | id = currentBoardId }
     , player = initialPlayer
+    , wallsDict = Dict.empty
     , layout = NoLayout
     , isTouchAware = False
     , delayLeft = 0
@@ -288,6 +290,10 @@ storageHandler response state model =
                                         , colors = savedModel.colors
                                     }
                                         |> withNoCmd
+
+                                PersistentWalls walls ->
+                                    -- TODO
+                                    mdl |> withNoCmd
 
         _ ->
             mdl |> withCmd cmd
