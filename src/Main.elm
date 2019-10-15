@@ -984,10 +984,14 @@ renderContent model =
                 model.backButton
     in
     if hw + hw / 3 + 20 > ws.height then
+        let
+            sw =
+                (ws.width - hw - 20) / 2
+        in
         div []
-            [ r2 (hw / 3) True model.player model.board
+            [ r2 sw True model.player model.board
             , r1 hw False model.player model.board
-            , renderControls (hw / 3)
+            , renderControls sw
             ]
 
     else
