@@ -956,7 +956,7 @@ renderContent model =
             min (ws.height - 20) ((ws.width - 20) / (1 + 2 / 3))
 
         w =
-            min ws.width <| ws.height * 2 / 3
+            min (ws.width - 20) <| ws.height * 2 / 3
 
         ta =
             model.isTouchAware
