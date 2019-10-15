@@ -193,6 +193,7 @@ type Write
 type Msg
     = InitialSize Size
     | Resize Size
+    | ToggleColors
     | DownKey String
     | RepeatButtonMsg Float Operation Button.Msg
     | ButtonMsg Operation Button.Msg

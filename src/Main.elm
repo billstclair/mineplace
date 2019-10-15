@@ -90,7 +90,7 @@ import MinePlace.Persistence as Persistence
         , writeModel
         , writePlayer
         )
-import MinePlace.Render exposing (render2d, render3d, renderControls)
+import MinePlace.Render as Render
 import MinePlace.Styles as Styles
 import MinePlace.Types as Types
     exposing
@@ -678,6 +678,17 @@ update msg model =
         Resize size ->
             { model | windowSize = size } |> withNoCmd
 
+        ToggleColors ->
+            { model
+                | colors =
+                    if model.colors == Types.darkColors then
+                        Types.lightColors
+
+                    else
+                        Types.darkColors
+            }
+                |> withNoCmd
+
         DownKey key ->
             let
                 mdl =
@@ -926,28 +937,40 @@ renderContent model =
         ta =
             model.isTouchAware
 
+        colors =
+            colorsToButtonColors model.colors
+
         ( r1, r2 ) =
             case model.layout of
                 NormalLayout ->
-                    ( render3d ta, render2d False ta )
+                    ( Render.render3d colors ta, Render.render2d colors False ta )
 
                 EditingLayout ->
-                    ( render2d True ta, render3d ta )
+                    ( Render.render2d colors True ta, Render.render3d colors ta )
 
                 _ ->
-                    ( render2d False ta, render3d ta )
+                    ( Render.render2d colors False ta, Render.render3d colors ta )
     in
     div []
         [ r1 w False model.player model.board
         , br
         , r2 (w / 3) True model.player model.board
         , space
-        , renderControls (w / 3)
+        , Render.renderControls colors
+            (w / 3)
             model.isTouchAware
             model.layout
             model.forwardButton
             model.backButton
         ]
+
+
+colorsToButtonColors : Types.Colors -> Button.Colors
+colorsToButtonColors colors =
+    { background = colors.borderFill
+    , outline = colors.borderStroke
+    , text = colors.borderStroke
+    }
 
 
 view : Model -> Document Msg
@@ -970,6 +993,15 @@ view model =
                     ]
                 , p []
                     [ text "Server coming soon. " ]
+                , p []
+                    [ input
+                        [ type_ "checkbox"
+                        , checked <| model.colors == Types.darkColors
+                        , onClick ToggleColors
+                        ]
+                        []
+                    , text " Dark Mode"
+                    ]
                 , p []
                     [ logoLink "https://github.com/billstclair/minespace"
                         "GitHub-Mark-32px.png"

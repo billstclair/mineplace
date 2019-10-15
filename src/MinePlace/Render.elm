@@ -62,14 +62,11 @@ import Svg.Button as Button
     exposing
         ( Button
         , Content(..)
-        , checkSubscription
-        , getState
-        , setSize
         )
 
 
-render2d : Bool -> Bool -> Float -> Bool -> Player -> Board -> Html Msg
-render2d forEditing isTouchAware w withToggleButton player board =
+render2d : Button.Colors -> Bool -> Bool -> Float -> Bool -> Player -> Board -> Html Msg
+render2d colors forEditing isTouchAware w withToggleButton player board =
     let
         rows =
             board.rows
@@ -122,7 +119,7 @@ render2d forEditing isTouchAware w withToggleButton player board =
             []
         , g [ class "SvgLine" ] <|
             List.indexedMap
-                (render2dRow isTouchAware forEditing delta)
+                (render2dRow colors isTouchAware forEditing delta)
                 (Array.toList board.contents)
         , if not forEditing then
             g [] []
@@ -133,22 +130,30 @@ render2d forEditing isTouchAware w withToggleButton player board =
                     ( outerw - 2, 0 )
                     (TextContent "+")
                     (ButtonMsg <| AddColumn 1)
-                    (simpleButton addcolSize (AddColumn 1) isTouchAware)
+                    (simpleButton addcolSize (AddColumn 1) isTouchAware
+                        |> Button.setColors colors
+                    )
                 , Button.render
                     ( outerw - 2, addcolw - 2 )
                     (TextContent "-")
                     (ButtonMsg <| AddColumn -1)
-                    (simpleButton addcolSize (AddColumn -1) isTouchAware)
+                    (simpleButton addcolSize (AddColumn -1) isTouchAware
+                        |> Button.setColors colors
+                    )
                 , Button.render
                     ( 0, outerh - 2 )
                     (TextContent "+")
                     (ButtonMsg <| AddRow 1)
-                    (simpleButton addcolSize (AddRow 1) isTouchAware)
+                    (simpleButton addcolSize (AddRow 1) isTouchAware
+                        |> Button.setColors colors
+                    )
                 , Button.render
                     ( addcolw - 2, outerh - 2 )
                     (TextContent "-")
                     (ButtonMsg <| AddRow -1)
-                    (simpleButton addcolSize (AddRow -1) isTouchAware)
+                    (simpleButton addcolSize (AddRow -1) isTouchAware
+                        |> Button.setColors colors
+                    )
                 ]
         , render2dPlayer delta player
         , if withToggleButton then
@@ -159,16 +164,16 @@ render2d forEditing isTouchAware w withToggleButton player board =
         ]
 
 
-render2dRow : Bool -> Bool -> Float -> Int -> Row -> Svg Msg
-render2dRow isTouchAware forEditing delta rowidx row =
+render2dRow : Button.Colors -> Bool -> Bool -> Float -> Int -> Row -> Svg Msg
+render2dRow colors isTouchAware forEditing delta rowidx row =
     g [] <|
         List.indexedMap
-            (render2dCell isTouchAware forEditing delta rowidx)
+            (render2dCell colors isTouchAware forEditing delta rowidx)
             (Array.toList row)
 
 
-render2dCell : Bool -> Bool -> Float -> Int -> Int -> Cell -> Svg Msg
-render2dCell isTouchAware forEditing delta rowidx colidx cell =
+render2dCell : Button.Colors -> Bool -> Bool -> Float -> Int -> Int -> Cell -> Svg Msg
+render2dCell colors isTouchAware forEditing delta rowidx colidx cell =
     let
         walls =
             cell.walls
@@ -555,8 +560,8 @@ fts =
     String.fromFloat
 
 
-render3dCell : Float -> RenderCell -> List (Svg Msg)
-render3dCell w cell =
+render3dCell : Button.Colors -> Float -> RenderCell -> List (Svg Msg)
+render3dCell colors w cell =
     let
         ldn =
             cell.lastdn
@@ -672,8 +677,8 @@ render3dCell w cell =
         |> List.concat
 
 
-render3d : Bool -> Float -> Bool -> Player -> Board -> Html Msg
-render3d isTouchAware w withToggleButton player board =
+render3d : Button.Colors -> Bool -> Float -> Bool -> Player -> Board -> Html Msg
+render3d colors isTouchAware w withToggleButton player board =
     let
         ws =
             fts w
@@ -685,7 +690,7 @@ render3d isTouchAware w withToggleButton player board =
             computeRenderCells w player board
 
         cells =
-            List.concatMap (render3dCell w) renderCells
+            List.concatMap (render3dCell colors w) renderCells
     in
     svg
         [ width ws
@@ -718,8 +723,8 @@ simpleButton size operation isTouchAware =
     Button.setTouchAware isTouchAware button
 
 
-renderControls : Float -> Bool -> Layout -> Button Operation -> Button Operation -> Html Msg
-renderControls w isTouchAware layout forwardButton reverseButton =
+renderControls : Button.Colors -> Float -> Bool -> Layout -> Button Operation -> Button Operation -> Html Msg
+renderControls colors w isTouchAware layout forwardButton reverseButton =
     let
         ws =
             fts w
@@ -749,22 +754,30 @@ renderControls w isTouchAware layout forwardButton reverseButton =
             ( 2, leftRightY )
             (TextContent "<")
             (ButtonMsg TurnLeft)
-            (simpleButton size TurnLeft isTouchAware)
+            (simpleButton size TurnLeft isTouchAware
+                |> Button.setColors colors
+            )
         , Button.render
             ( 2 * bw - 2, leftRightY )
             (TextContent ">")
             (ButtonMsg TurnRight)
-            (simpleButton size TurnRight isTouchAware)
+            (simpleButton size TurnRight isTouchAware
+                |> Button.setColors colors
+            )
         , Button.render
             ( bw, 2 )
             (TextContent "^")
             (ButtonMsg GoForward)
-            (setSize size forwardButton)
+            (Button.setSize size forwardButton
+                |> Button.setColors colors
+            )
         , Button.render
             ( bw, bw )
             (TextContent "v")
             (ButtonMsg GoBack)
-            (setSize size reverseButton)
+            (Button.setSize size reverseButton
+                |> Button.setColors colors
+            )
         , case layout of
             TopViewLayout ->
                 g []
@@ -772,12 +785,16 @@ renderControls w isTouchAware layout forwardButton reverseButton =
                         ( 2, bw )
                         (TextContent "Edit")
                         (ButtonMsg EditMaze)
-                        (simpleButton size EditMaze isTouchAware)
+                        (simpleButton size EditMaze isTouchAware
+                            |> Button.setColors colors
+                        )
                     , Button.render
                         ( 2 * bw - 2, bw )
                         (TextContent "Get")
                         (ButtonMsg GetMaze)
-                        (simpleButton size GetMaze isTouchAware)
+                        (simpleButton size GetMaze isTouchAware
+                            |> Button.setColors colors
+                        )
                     ]
 
             EditingLayout ->
@@ -786,12 +803,16 @@ renderControls w isTouchAware layout forwardButton reverseButton =
                         ( 2, bw )
                         (TextContent "Save")
                         (ButtonMsg SaveMaze)
-                        (simpleButton size SaveMaze isTouchAware)
+                        (simpleButton size SaveMaze isTouchAware
+                            |> Button.setColors colors
+                        )
                     , Button.render
                         ( 2 * bw - 2, bw )
                         (TextContent "Init")
                         (ButtonMsg GetMaze)
-                        (simpleButton size GetMaze isTouchAware)
+                        (simpleButton size GetMaze isTouchAware
+                            |> Button.setColors colors
+                        )
                     ]
 
             _ ->
