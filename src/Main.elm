@@ -952,8 +952,11 @@ renderContent model =
         ws =
             model.windowSize
 
+        hw =
+            min (ws.height - 20) ((ws.width - 20) / (1 + 2 / 3))
+
         w =
-            0.9 * min ws.width (ws.height * 2 / 3)
+            min ws.width <| ws.height * 2 / 3
 
         ta =
             model.isTouchAware
@@ -971,19 +974,30 @@ renderContent model =
 
                 _ ->
                     ( Render.render2d colors False ta, Render.render3d colors ta )
+
+        renderControls height =
+            Render.renderControls colors
+                height
+                model.isTouchAware
+                model.layout
+                model.forwardButton
+                model.backButton
     in
-    div []
-        [ r1 w False model.player model.board
-        , br
-        , r2 (w / 3) True model.player model.board
-        , space
-        , Render.renderControls colors
-            (w / 3)
-            model.isTouchAware
-            model.layout
-            model.forwardButton
-            model.backButton
-        ]
+    if hw + hw / 3 + 20 > ws.height then
+        div []
+            [ r2 (hw / 3) True model.player model.board
+            , r1 hw False model.player model.board
+            , renderControls (hw / 3)
+            ]
+
+    else
+        div []
+            [ r1 w False model.player model.board
+            , br
+            , r2 (w / 3) True model.player model.board
+            , space
+            , renderControls (w / 2)
+            ]
 
 
 colorsToButtonColors : Types.Colors -> Button.Colors

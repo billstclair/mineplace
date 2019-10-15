@@ -730,10 +730,10 @@ renderControls colors w isTouchAware layout forwardButton reverseButton =
             fts w
 
         bw =
-            w / 2
+            w / 3
 
-        bw3s =
-            fts (bw * 3)
+        bw2s =
+            fts (bw * 2)
 
         leftRightY =
             if layout == NormalLayout then
@@ -747,8 +747,8 @@ renderControls colors w isTouchAware layout forwardButton reverseButton =
             ( bw, bw )
     in
     svg
-        [ width bw3s
-        , height ws
+        [ width ws
+        , height bw2s
         ]
         [ Button.render
             ( 2, leftRightY )
