@@ -83,7 +83,9 @@ type Started
 
 
 type alias Colors =
-    { errorBackground : String
+    { windowBackground : String
+    , textColor : String
+    , errorBackground : String
     , errorColor : String
     , borderStroke : String
     , borderFill : String
@@ -107,7 +109,9 @@ nearBlack =
 
 lightColors : Colors
 lightColors =
-    { errorBackground = "red"
+    { windowBackground = "white"
+    , textColor = "black"
+    , errorBackground = "red"
     , errorColor = "white"
     , borderStroke = "black"
     , borderFill = "white"
@@ -121,7 +125,9 @@ lightColors =
 
 darkColors : Colors
 darkColors =
-    { errorBackground = nearBlack
+    { windowBackground = "darkgray"
+    , textColor = nearWhite
+    , errorBackground = nearBlack
     , errorColor = "red"
     , borderStroke = nearWhite
     , borderFill = nearBlack

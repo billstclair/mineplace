@@ -125,7 +125,9 @@ layoutDecoder =
 colorsEncoder : Colors -> Value
 colorsEncoder colors =
     JE.object
-        [ ( "errorBackground", JE.string colors.errorBackground )
+        [ ( "windowBackground", JE.string colors.windowBackground )
+        , ( "textColor", JE.string colors.textColor )
+        , ( "errorBackground", JE.string colors.errorBackground )
         , ( "errorColor", JE.string colors.errorColor )
         , ( "borderStroke", JE.string colors.borderStroke )
         , ( "borderFill", JE.string colors.borderFill )
@@ -140,6 +142,8 @@ colorsEncoder colors =
 colorsDecoder : Decoder Colors
 colorsDecoder =
     JD.succeed Colors
+        |> required "windowBackground" JD.string
+        |> required "textColor" JD.string
         |> required "errorBackground" JD.string
         |> required "errorColor" JD.string
         |> required "borderStroke" JD.string

@@ -47,6 +47,7 @@ import Html.Attributes
         ( align
         , alt
         , checked
+        , class
         , colspan
         , disabled
         , height
@@ -679,15 +680,18 @@ update msg model =
             { model | windowSize = size } |> withNoCmd
 
         ToggleColors ->
-            { model
-                | colors =
-                    if model.colors == Types.darkColors then
-                        Types.lightColors
+            let
+                mdl =
+                    { model
+                        | colors =
+                            if model.colors == Types.darkColors then
+                                Types.lightColors
 
-                    else
-                        Types.darkColors
-            }
-                |> withNoCmd
+                            else
+                                Types.darkColors
+                    }
+            in
+            mdl |> withCmd (writeModel mdl cmdPort)
 
         DownKey key ->
             let
@@ -981,43 +985,49 @@ view model =
             [ div [] [] ]
 
         else
-            [ div [ align "center" ]
+            [ div
+                [ class "WindowText"
+                , style "padding" "0"
+                , style "margin" "0"
+                ]
                 [ Styles.style model.colors
-                , h2 []
-                    [ text "MinePlace" ]
-                , renderContent model
-                , p []
-                    [ text "Use IJKL or WASD to move/rotate."
-                    , br
-                    , text "Click in the small maze view to make it big."
-                    ]
-                , p []
-                    [ text "Server coming soon. " ]
-                , p []
-                    [ input
-                        [ type_ "checkbox"
-                        , checked <| model.colors == Types.darkColors
-                        , onClick ToggleColors
+                , div [ align "center" ]
+                    [ renderContent model
+                    , p []
+                        [ input
+                            [ type_ "checkbox"
+                            , checked <| model.colors == Types.darkColors
+                            , onClick ToggleColors
+                            ]
+                            []
+                        , text " Dark Mode"
                         ]
-                        []
-                    , text " Dark Mode"
-                    ]
-                , p []
-                    [ logoLink "https://github.com/billstclair/minespace"
-                        "GitHub-Mark-32px.png"
-                        "GitHub source code"
-                        32
-                    , space
-                    , logoLink "http://elm-lang.org/"
-                        "elm-logo-125x125.png"
-                        "Elm inside"
-                        28
-                    , br
-                    , text (copyright ++ " 2018 ")
-                    , a [ href "https://GibGoyGames.com/" ]
-                        [ text "Gib Goy Games" ]
-                    , space
-                    , mailLink "GibGoyGames@gmail.com"
+                    , p []
+                        [ h2 []
+                            [ text "MinePlace" ]
+                        , text "Use IJKL or WASD to move/rotate."
+                        , br
+                        , text "Click in the small maze view to make it big."
+                        ]
+                    , p []
+                        [ text "Server coming soon. " ]
+                    , p []
+                        [ logoLink "https://github.com/billstclair/minespace"
+                            "GitHub-Mark-32px.png"
+                            "GitHub source code"
+                            32
+                        , space
+                        , logoLink "http://elm-lang.org/"
+                            "elm-logo-125x125.png"
+                            "Elm inside"
+                            28
+                        , br
+                        , text (copyright ++ " 2018 ")
+                        , a [ href "https://GibGoyGames.com/" ]
+                            [ text "Gib Goy Games" ]
+                        , space
+                        , mailLink "GibGoyGames@gmail.com"
+                        ]
                     ]
                 ]
             ]

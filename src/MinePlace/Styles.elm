@@ -29,6 +29,7 @@ type SClass
     | SvgLine
     | Svg2dPlayer
     | SvgEditorHighlight
+    | WindowText
 
 
 imports : List String
@@ -81,6 +82,11 @@ rules colors =
         , ( "stroke-width", "1px" )
         , ( "stroke-opacity", "0.1" )
         , ( "fill-opacity", "0.1" )
+        ]
+    , rule
+        [ Class WindowText ]
+        [ ( "background", colors.windowBackground )
+        , ( "color", colors.textColor )
         ]
     ]
 
