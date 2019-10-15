@@ -15,7 +15,7 @@ port module Main exposing (main)
 import Browser exposing (Document, UrlRequest)
 import Browser.Dom as Dom exposing (Viewport)
 import Browser.Events as Events
-import Browser.Navigation exposing (Key)
+import Browser.Navigation as Navigation exposing (Key)
 import Char
 import Cmd.Extra exposing (withCmd, withCmds, withNoCmd)
 import Debug exposing (log)
@@ -714,8 +714,16 @@ update msg model =
                 Ok res ->
                     res
 
-        OnUrlRequest _ ->
-            model |> withNoCmd
+        OnUrlRequest request ->
+            model
+                |> withCmd
+                    (case request of
+                        Browser.External url ->
+                            Navigation.load url
+
+                        _ ->
+                            Cmd.none
+                    )
 
         OnUrlChange _ ->
             model |> withNoCmd
@@ -908,9 +916,17 @@ sqrimg url name size =
         []
 
 
+blankTarget : Attribute msg
+blankTarget =
+    target "blank"
+
+
 logoLink : String -> String -> String -> Int -> Html Msg
 logoLink url img name size =
-    a [ href url ]
+    a
+        [ href url
+        , blankTarget
+        ]
         [ sqrimg ("images/" ++ img) name size ]
 
 
@@ -918,7 +934,8 @@ mailLink : String -> Html Msg
 mailLink email =
     span []
         [ text "<"
-        , a [ href ("mailto:" ++ email) ]
+        , a
+            [ href ("mailto:" ++ email) ]
             [ text email ]
         , text ">"
         ]
@@ -1012,7 +1029,7 @@ view model =
                     , p []
                         [ text "Server coming soon. " ]
                     , p []
-                        [ logoLink "https://github.com/billstclair/minespace"
+                        [ logoLink "https://github.com/billstclair/mineplace"
                             "GitHub-Mark-32px.png"
                             "GitHub source code"
                             32
@@ -1023,7 +1040,10 @@ view model =
                             28
                         , br
                         , text (copyright ++ " 2018 ")
-                        , a [ href "https://GibGoyGames.com/" ]
+                        , a
+                            [ href "https://GibGoyGames.com/"
+                            , blankTarget
+                            ]
                             [ text "Gib Goy Games" ]
                         , space
                         , mailLink "GibGoyGames@gmail.com"
