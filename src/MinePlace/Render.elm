@@ -572,33 +572,60 @@ render3dCell colors w cell =
         end =
             cell.end
 
+        h =
+            0.35
+
         ( lltx, llty ) =
             ( fts ldn, fts ldn )
+
+        ( lltxmh, lltymh ) =
+            ( fts <| ldn - h, fts <| ldn - h )
 
         ( llbx, llby ) =
             ( fts ldn, fts <| w - ldn )
 
+        ( llbxmh, llbyph ) =
+            ( fts <| ldn - h, fts <| w - ldn + h )
+
         ( ltx, lty ) =
             ( fts dn, fts dn )
+
+        ( ltxph, ltyph ) =
+            ( fts <| dn + h, fts <| dn + h )
 
         ( lbx, lby ) =
             ( fts dn, fts <| w - dn )
 
+        ( lbxph, lbymh ) =
+            ( fts <| dn + h, fts <| w - dn - h )
+
         ( rltx, rlty ) =
             ( fts <| w - ldn, fts ldn )
+
+        ( rltxph, rltymh ) =
+            ( fts <| w - ldn + h, fts <| ldn - h )
 
         ( rlbx, rlby ) =
             ( fts <| w - ldn, fts <| w - ldn )
 
+        ( rlbxph, rlbyph ) =
+            ( fts <| w - ldn + h, fts <| w - ldn + h )
+
         ( rtx, rty ) =
             ( fts <| w - dn, fts dn )
 
+        ( rtxmh, rtyph ) =
+            ( fts <| w - dn - h, fts <| dn + h )
+
         ( rbx, rby ) =
             ( fts <| w - dn, fts <| w - dn )
+
+        ( rbxmh, rbymh ) =
+            ( fts <| w - dn - h, fts <| w - dn - h )
     in
     [ if cell.left then
-        [ Svg.line [ x1 lltx, y1 llty, x2 ltx, y2 lty ] []
-        , Svg.line [ x1 llbx, y1 llby, x2 lbx, y2 lby ] []
+        [ Svg.line [ x1 lltxmh, y1 lltymh, x2 ltxph, y2 ltyph ] []
+        , Svg.line [ x1 llbxmh, y1 llbyph, x2 lbxph, y2 lbymh ] []
         , if end then
             Svg.line [ x1 ltx, y1 lty, x2 lbx, y2 lby ] []
 
@@ -623,17 +650,23 @@ render3dCell colors w cell =
         let
             tx =
                 fts (dn - (0.25 * (dn - ldn)))
+
+            ltym1 =
+                fts <| dn - 1
+
+            lbyp1 =
+                fts <| w - dn + 1
         in
         [ Svg.line [ x1 ltx, y1 lty, x2 tx, y2 lty ] []
-        , Svg.line [ x1 tx, y1 lty, x2 tx, y2 lby ] []
+        , Svg.line [ x1 tx, y1 ltym1, x2 tx, y2 lbyp1 ] []
         , Svg.line [ x1 tx, y1 lby, x2 lbx, y2 lby ] []
         ]
 
       else
         []
     , if cell.right then
-        [ Svg.line [ x1 rltx, y1 rlty, x2 rtx, y2 rty ] []
-        , Svg.line [ x1 rlbx, y1 rlby, x2 rbx, y2 rby ] []
+        [ Svg.line [ x1 rltxph, y1 rltymh, x2 rtxmh, y2 rtyph ] []
+        , Svg.line [ x1 rlbxph, y1 rlbyph, x2 rbxmh, y2 rbymh ] []
         , if end then
             Svg.line [ x1 rtx, y1 rty, x2 rbx, y2 rby ] []
 
@@ -658,9 +691,15 @@ render3dCell colors w cell =
         let
             tx =
                 fts (w - dn + (0.25 * (dn - ldn)))
+
+            rtym1 =
+                fts <| dn - 1
+
+            rbyp1 =
+                fts <| w - dn + 1
         in
         [ Svg.line [ x1 rtx, y1 rty, x2 tx, y2 rty ] []
-        , Svg.line [ x1 tx, y1 rty, x2 tx, y2 rby ] []
+        , Svg.line [ x1 tx, y1 rtym1, x2 tx, y2 rbyp1 ] []
         , Svg.line [ x1 tx, y1 rby, x2 rbx, y2 rby ] []
         ]
 
