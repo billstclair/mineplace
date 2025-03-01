@@ -2,7 +2,7 @@
 --
 -- Main.elm
 -- Top-level for MinePlace application.
--- Copyright (c) 2018-2019 Bill St. Clair <billstclair@gmail.com>
+-- Copyright (c) 2018-2025 Bill St. Clair <billstclair@gmail.com>
 -- Some rights reserved.
 -- Distributed under the MIT License
 -- See LICENSE.txt
@@ -1063,7 +1063,7 @@ view model =
                             "Elm inside"
                             28
                         , br
-                        , text (copyright ++ " 2018 ")
+                        , text (copyright ++ " 2018-2025 ")
                         , a
                             [ href "https://GibGoyGames.com/"
                             , blankTarget
