@@ -703,7 +703,7 @@ update msg model =
         DownKey key ->
             let
                 mdl =
-                    processDownKey key model
+                    processDownKey (Debug.log "DownKey" key) model
             in
             mdl |> withCmd (writePlayer mdl.player cmdPort)
 
@@ -856,22 +856,22 @@ movePlayer dir model =
 
 upChars : List String
 upChars =
-    [ "i", "I", "w", "W" ]
+    [ "i", "I", "w", "W", "ArrowUp" ]
 
 
 downChars : List String
 downChars =
-    [ "k", "K", "s", "S" ]
+    [ "k", "K", "s", "S", "ArrowDown" ]
 
 
 rightChars : List String
 rightChars =
-    [ "l", "L", "d", "D" ]
+    [ "l", "L", "d", "D", "ArrowRight" ]
 
 
 leftChars : List String
 leftChars =
-    [ "j", "J", "a", "A" ]
+    [ "j", "J", "a", "A", "ArrowLeft" ]
 
 
 processDownKey : String -> Model -> Model
@@ -1055,7 +1055,7 @@ viewBody model =
                         , p []
                             [ h2 []
                                 [ text "MinePlace" ]
-                            , text "Use IJKL or WASD to move/rotate."
+                            , text "Use IJKL, WASD, or arrows to move/rotate."
                             , br
                             , text "Click in the small maze view to make it big."
                             ]
