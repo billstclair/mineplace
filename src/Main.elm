@@ -65,6 +65,7 @@ import Html.Attributes
         , width
         )
 import Html.Events exposing (onClick, onInput)
+import Html.Lazy as Lazy
 import Json.Decode as JD exposing (Decoder)
 import Json.Encode as JE exposing (Value)
 import List.Extra as LE
@@ -1022,60 +1023,68 @@ view : Model -> Document Msg
 view model =
     { title = "MinePlace"
     , body =
-        if model.layout == NoLayout then
-            [ div [] [] ]
+        viewBody model
+    }
 
-        else
-            [ div
-                [ class "WindowText"
-                , style "padding" "0"
-                , style "margin" "0"
-                ]
-                [ Styles.style model.colors
-                , div [ align "center" ]
-                    [ renderContent model
-                    , p []
-                        [ input
-                            [ type_ "checkbox"
-                            , checked <| model.colors == Types.darkColors
-                            , onClick ToggleColors
+
+viewBody : Model -> List (Html Msg)
+viewBody model =
+    if model.layout == NoLayout then
+        [ div [] [] ]
+
+    else
+        let
+            paint mdl =
+                div
+                    [ class "WindowText"
+                    , style "padding" "0"
+                    , style "margin" "0"
+                    ]
+                    [ Styles.style mdl.colors
+                    , div [ align "center" ]
+                        [ renderContent mdl
+                        , p []
+                            [ input
+                                [ type_ "checkbox"
+                                , checked <| mdl.colors == Types.darkColors
+                                , onClick ToggleColors
+                                ]
+                                []
+                            , text " Dark Mode"
                             ]
-                            []
-                        , text " Dark Mode"
-                        ]
-                    , p []
-                        [ h2 []
-                            [ text "MinePlace" ]
-                        , text "Use IJKL or WASD to move/rotate."
-                        , br
-                        , text "Click in the small maze view to make it big."
-                        ]
-                    , p []
-                        [ text "Server coming soon. " ]
-                    , p []
-                        [ logoLink "https://github.com/billstclair/mineplace"
-                            "GitHub-Mark-32px.png"
-                            "GitHub source code"
-                            32
-                        , space
-                        , logoLink "http://elm-lang.org/"
-                            "elm-logo-125x125.png"
-                            "Elm inside"
-                            28
-                        , br
-                        , text (copyright ++ " 2018-2025 ")
-                        , a
-                            [ href "https://GibGoyGames.com/"
-                            , blankTarget
+                        , p []
+                            [ h2 []
+                                [ text "MinePlace" ]
+                            , text "Use IJKL or WASD to move/rotate."
+                            , br
+                            , text "Click in the small maze view to make it big."
                             ]
-                            [ text "Gib Goy Games" ]
-                        , space
-                        , mailLink "GibGoyGames@gmail.com"
+                        , p []
+                            [ text "Server coming soon. " ]
+                        , p []
+                            [ logoLink "https://github.com/billstclair/mineplace"
+                                "GitHub-Mark-32px.png"
+                                "GitHub source code"
+                                32
+                            , space
+                            , logoLink "http://elm-lang.org/"
+                                "elm-logo-125x125.png"
+                                "Elm inside"
+                                28
+                            , br
+                            , text (copyright ++ " 2018-2025 ")
+                            , a
+                                [ href "https://GibGoyGames.com/"
+                                , blankTarget
+                                ]
+                                [ text "Gib Goy Games" ]
+                            , space
+                            , mailLink "GibGoyGames@gmail.com"
+                            ]
                         ]
                     ]
-                ]
-            ]
-    }
+        in
+        [ paint model ]
 
 
 keyDecoder : Decoder Msg
