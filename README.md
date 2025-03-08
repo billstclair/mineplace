@@ -1,4 +1,4 @@
-# [MinePlace.social](https://mineplace.social/)
+# [MinePlace.xyz](https://mineplace.xyz/)
 
 “In that famous mining game, you build a mine. In MinePlace, you live in a mansion.”
 
