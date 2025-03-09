@@ -1,0 +1,5 @@
+#!/bin/bash
+
+rsync -av site/js server/
+elm make src/Mineplace/Server/Server.elm --output server/server.js
+elm make src/Mineplace/Server/Client.elm --output server/client.js

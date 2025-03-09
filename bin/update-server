@@ -1,0 +1,5 @@
+#!/bin/bash
+
+./bin/build-server
+cd server
+rsyncit -av --exclude node_modules *

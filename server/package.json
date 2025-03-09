@@ -1,0 +1,25 @@
+{
+  "name": "minepace-server",
+  "version": "1.0.0",
+  "description": "Websocket server for Mineplace.",
+  "author": "billstclair",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/billstclair/mineplace.git"
+  },
+  "main": "index.js",
+  "scripts": {
+    "start": "node ."
+  },
+  "files": [
+    "index.js",
+    "lib/WebSocketServer.js"
+  ],
+  "dependencies": {
+    "uuid": ">=3.0.1",
+    "ecstatic": ">=2.1.0",
+    "ws": ">=3.3.1"
+  },
+  "devDependencies": {},
+  "license": "MIT"
+}
