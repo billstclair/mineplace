@@ -1,4 +1,16 @@
-port module Zephyrnot.Server.Server exposing (main)
+---------------------------------------------------------------------
+--
+-- Server.elm
+-- WebSocket server for Mineplace
+-- Copyright (c) 2018-2025 Bill St. Clair <billstclair@gmail.com>
+-- Some rights reserved.
+-- Distributed under the MIT License
+-- See LICENSE.txt
+--
+----------------------------------------------------------------------
+
+
+port module MinePlace.Server.Server exposing (main)
 
 import Set exposing (Set)
 import WebSocketFramework.Server
