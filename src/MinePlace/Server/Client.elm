@@ -19,15 +19,9 @@ import Html.Attributes as A
 import Html.Events as E
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
-import PortFunnel.WebSocket as WebSocket exposing (Response(..))
-import PortFunnels exposing (FunnelDict, Handler(..), State)
-import Task
-import Url
-import WebSocketFramework.EncodeDecode as WSFED
-import WebSocketFramework.Types exposing (GameId, PlayerId)
-import Zephyrnot.EncodeDecode as ED
-import Zephyrnot.Interface as Interface
-import Zephyrnot.Types as Types
+import MinePlace.EncodeDecode as ED
+import MinePlace.Interface as Interface
+import MinePlace.Types as Types
     exposing
         ( Choice(..)
         , GameState
@@ -37,6 +31,12 @@ import Zephyrnot.Types as Types
         , PublicType(..)
         , Winner(..)
         )
+import PortFunnel.WebSocket as WebSocket exposing (Response(..))
+import PortFunnels exposing (FunnelDict, Handler(..), State)
+import Task
+import Url
+import WebSocketFramework.EncodeDecode as WSFED
+import WebSocketFramework.Types exposing (GameId, PlayerId)
 
 
 main : Program String Model Msg

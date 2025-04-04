@@ -12,6 +12,18 @@
 
 port module MinePlace.Server.Server exposing (main)
 
+import MinePlace.EncodeDecode as ED
+import MinePlace.Interface as Interface
+import MinePlace.Types as Types
+    exposing
+        ( Decoration(..)
+        , GameState
+        , Message(..)
+        , Player
+        , PlayerNames
+        , PublicType(..)
+        , SubscriptionSet
+        )
 import Set exposing (Set)
 import WebSocketFramework.Server
     exposing
@@ -31,18 +43,6 @@ import WebSocketFramework.Types
         , GameId
         , InputPort
         , OutputPort
-        )
-import Zephyrnot.EncodeDecode as ED
-import Zephyrnot.Interface as Interface
-import Zephyrnot.Types as Types
-    exposing
-        ( Decoration(..)
-        , GameState
-        , Message(..)
-        , Player
-        , PlayerNames
-        , PublicType(..)
-        , SubscriptionSet
         )
 
 

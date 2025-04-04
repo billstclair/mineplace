@@ -110,8 +110,8 @@ messageProcessor state message =
 
 
 messageProcessorInternal : ServerState -> Message -> ( ServerState, Maybe Message )
-messageProcessorInternal state message =
-    case message of
+messageProcessorInternal state msg =
+    case msg of
         PingReq { message } ->
             ( state, Just <| PongRsp { message = message } )
 
@@ -126,7 +126,7 @@ messageProcessorInternal state message =
             , Just <|
                 ErrorRsp
                     { error = RandomError "Not implemented"
-                    , message = "Message not yet implemented: " ++ toString message
+                    , message = "Message not yet implemented: " ++ Debug.toString msg
                     }
             )
 
@@ -183,7 +183,7 @@ loginWithPassword userid password state =
 
 
 removeFromGameDict : PlayerId -> List GamePlayer -> Dict GameId (List PlayerId) -> Dict GameId (List PlayerId)
-removeFromGameDict playerid gamePlayers gameDict =
+removeFromGameDict playerid players gameDict =
     List.foldl
         (\gameid dict ->
             case Dict.get gameid dict of
@@ -199,7 +199,7 @@ removeFromGameDict playerid gamePlayers gameDict =
                             Dict.insert gameid pids dict
         )
         gameDict
-        (List.map .gameid gamePlayers)
+        (List.map .gameid players)
 
 
 logout : PlayerId -> ServerState -> ( ServerState, Maybe Message )
@@ -223,7 +223,7 @@ logout playerid state =
                                 Nothing ->
                                     ( state.state, [] )
 
-                                Just gamePlayers ->
+                                Just players ->
                                     ( Just <|
                                         Server
                                             { playerDict =
@@ -231,10 +231,10 @@ logout playerid state =
                                             , gameDict =
                                                 removeFromGameDict
                                                     playerid
-                                                    gamePlayers
+                                                    players
                                                     gameDict
                                             }
-                                    , gamePlayers
+                                    , players
                                     )
 
                         _ ->
