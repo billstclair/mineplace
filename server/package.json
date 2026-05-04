@@ -16,7 +16,7 @@
     "lib/WebSocketServer.js"
   ],
   "dependencies": {
-    "uuid": ">=3.0.1",
+    "uuid": ">=14.0.0",
     "ecstatic": ">=2.1.0",
     "ws": ">=7.5.10"
   },
