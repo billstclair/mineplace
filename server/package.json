@@ -18,7 +18,7 @@
   "dependencies": {
     "uuid": ">=3.0.1",
     "ecstatic": ">=2.1.0",
-    "ws": ">=7.5.10"
+    "ws": ">=8.20.1"
   },
   "devDependencies": {},
   "license": "MIT"
